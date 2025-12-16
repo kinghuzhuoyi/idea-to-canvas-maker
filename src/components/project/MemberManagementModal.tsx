@@ -26,6 +26,7 @@ import {
   Trash2,
   Mail,
   Calendar,
+  Clock,
 } from 'lucide-react';
 
 interface MemberManagementModalProps {
@@ -40,12 +41,14 @@ const roleLabels: Record<UserRole, string> = {
   admin: '管理者',
   editor: '编辑者',
   viewer: '查看者',
+  pending: '申请中',
 };
 
 const roleIcons: Record<UserRole, typeof Shield> = {
   admin: Shield,
   editor: Pencil,
   viewer: Eye,
+  pending: Clock,
 };
 
 export function MemberManagementModal({

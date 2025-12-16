@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'editor' | 'viewer';
+export type UserRole = 'admin' | 'editor' | 'viewer' | 'pending';
 
 export interface Project {
   id: string;
@@ -9,6 +9,12 @@ export interface Project {
   memberCount: number;
   userRole: UserRole;
   strategyCount: number;
+  // 申请相关信息（仅申请中状态使用）
+  applicationInfo?: {
+    appliedAt: string;
+    reason?: string;
+    status: 'pending' | 'approved' | 'rejected';
+  };
 }
 
 export interface Strategy {

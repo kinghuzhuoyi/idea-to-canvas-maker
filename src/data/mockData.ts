@@ -51,6 +51,36 @@ export const mockProjects: Project[] = [
     userRole: 'editor',
     strategyCount: 6,
   },
+  {
+    id: '6',
+    name: '数据分析平台',
+    description: '企业级数据分析与可视化决策平台，支持多维度数据洞察与报表生成。',
+    createdAt: '2024-10-15',
+    updatedAt: '2024-12-16',
+    memberCount: 12,
+    userRole: 'pending',
+    strategyCount: 20,
+    applicationInfo: {
+      appliedAt: '2024-12-14',
+      reason: '希望参与数据分析相关策略的开发工作',
+      status: 'pending',
+    },
+  },
+  {
+    id: '7',
+    name: '智能合规检测',
+    description: '金融行业合规风险自动识别与预警系统，确保业务合规性。',
+    createdAt: '2024-11-01',
+    updatedAt: '2024-12-15',
+    memberCount: 8,
+    userRole: 'pending',
+    strategyCount: 10,
+    applicationInfo: {
+      appliedAt: '2024-12-10',
+      reason: '有丰富的合规领域经验，希望贡献专业知识',
+      status: 'pending',
+    },
+  },
 ];
 
 export const mockStrategies: Record<string, Strategy[]> = {
