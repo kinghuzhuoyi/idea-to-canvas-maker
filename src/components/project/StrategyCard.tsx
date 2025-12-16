@@ -23,7 +23,7 @@ export function StrategyCard({ strategy, userRole, onView, onEdit, onDelete }: S
   const canDelete = userRole === 'admin';
 
   return (
-    <div className="group glass rounded-xl p-5 transition-all duration-200 hover:border-primary/30 animate-slide-up">
+    <div className="group card-elevated p-5 animate-slide-up hover:border-primary/20">
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
