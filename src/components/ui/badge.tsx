@@ -17,6 +17,7 @@ const badgeVariants = cva(
         admin: "border-primary/30 bg-primary/10 text-primary",
         editor: "border-success/30 bg-success/10 text-success",
         viewer: "border-muted-foreground/30 bg-muted text-muted-foreground",
+        pending: "border-warning/30 bg-warning/10 text-warning",
         active: "border-success/30 bg-success/10 text-success",
         inactive: "border-muted-foreground/30 bg-muted text-muted-foreground",
         draft: "border-warning/30 bg-warning/10 text-warning",

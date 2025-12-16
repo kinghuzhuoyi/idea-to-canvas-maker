@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { ProjectSidebar } from '@/components/project/ProjectSidebar';
 import { ProjectDetail } from '@/components/project/ProjectDetail';
+import { PendingProjectDetail } from '@/components/project/PendingProjectDetail';
 import { EmptyProjectState } from '@/components/project/EmptyProjectState';
 import { MemberManagementModal } from '@/components/project/MemberManagementModal';
 import { JoinProjectModal } from '@/components/project/JoinProjectModal';
@@ -48,6 +49,14 @@ const Index = () => {
     setProjectToLeave(null);
   };
 
+  const handleWithdrawApplication = (projectId: string) => {
+    toast({
+      title: '申请已撤回',
+      description: '您的项目加入申请已成功撤回。',
+    });
+    setSelectedProjectId(null);
+  };
+
   const projectToLeaveName = projectToLeave 
     ? mockProjects.find(p => p.id === projectToLeave)?.name || ''
     : '';
@@ -67,17 +76,24 @@ const Index = () => {
 
         <main className="flex-1 overflow-hidden bg-background">
           {selectedProject ? (
-            <ProjectDetail
-              project={selectedProject}
-              strategies={strategies}
-              onMemberClick={() => setMemberModalOpen(true)}
-              onCreateStrategy={() => {
-                toast({
-                  title: '功能开发中',
-                  description: '新建策略功能即将上线。',
-                });
-              }}
-            />
+            selectedProject.userRole === 'pending' ? (
+              <PendingProjectDetail
+                project={selectedProject}
+                onWithdraw={() => handleWithdrawApplication(selectedProject.id)}
+              />
+            ) : (
+              <ProjectDetail
+                project={selectedProject}
+                strategies={strategies}
+                onMemberClick={() => setMemberModalOpen(true)}
+                onCreateStrategy={() => {
+                  toast({
+                    title: '功能开发中',
+                    description: '新建策略功能即将上线。',
+                  });
+                }}
+              />
+            )
           ) : (
             <EmptyProjectState />
           )}

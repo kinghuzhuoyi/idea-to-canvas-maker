@@ -15,6 +15,7 @@ const roleLabels: Record<UserRole, string> = {
   admin: '管理者',
   editor: '编辑者',
   viewer: '查看者',
+  pending: '申请中',
 };
 
 export function ProjectCard({ project, isSelected, onClick, onLeave }: ProjectCardProps) {
