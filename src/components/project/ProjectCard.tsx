@@ -22,11 +22,11 @@ export function ProjectCard({ project, isSelected, onClick, onLeave }: ProjectCa
     <div
       onClick={onClick}
       className={cn(
-        'group relative p-4 rounded-xl cursor-pointer transition-all duration-200',
-        'border border-transparent',
+        'group relative p-4 rounded-xl cursor-pointer transition-all duration-300',
+        'border',
         isSelected
-          ? 'bg-accent border-primary/30 shadow-md'
-          : 'hover:bg-accent/50 hover:border-border'
+          ? 'bg-primary/5 border-primary/30 shadow-[0_2px_12px_hsl(199_89%_48%/0.12)]'
+          : 'bg-card border-transparent hover:bg-accent/40 hover:border-border/60 hover:shadow-sm'
       )}
     >
       <div className="flex items-start gap-3">

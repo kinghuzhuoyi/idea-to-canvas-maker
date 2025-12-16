@@ -56,11 +56,15 @@
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
     --gradient-glow: radial-gradient(ellipse at center, hsl(199 89% 48% / 0.1) 0%, transparent 70%);
     
-    /* Shadow tokens */
-    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.1), 0 2px 4px -2px hsl(222 47% 11% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.1), 0 4px 6px -4px hsl(222 47% 11% / 0.1);
-    --shadow-glow: 0 0 20px hsl(199 89% 48% / 0.2);
+    /* Shadow tokens - refined for light theme */
+    --shadow-xs: 0 1px 2px 0 hsl(222 47% 11% / 0.03);
+    --shadow-sm: 0 1px 3px 0 hsl(222 47% 11% / 0.06), 0 1px 2px -1px hsl(222 47% 11% / 0.06);
+    --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.07), 0 2px 4px -2px hsl(222 47% 11% / 0.05);
+    --shadow-lg: 0 10px 25px -5px hsl(222 47% 11% / 0.08), 0 8px 10px -6px hsl(222 47% 11% / 0.04);
+    --shadow-xl: 0 20px 40px -10px hsl(222 47% 11% / 0.1), 0 8px 16px -8px hsl(222 47% 11% / 0.06);
+    --shadow-glow: 0 0 20px hsl(199 89% 48% / 0.15);
+    --shadow-card: 0 1px 3px hsl(222 47% 11% / 0.04), 0 4px 12px hsl(222 47% 11% / 0.06);
+    --shadow-card-hover: 0 4px 12px hsl(222 47% 11% / 0.08), 0 8px 24px hsl(222 47% 11% / 0.1);
   }
 
   .light {
@@ -122,11 +126,39 @@
 
 @layer utilities {
   .glass {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+    @apply bg-card backdrop-blur-xl border border-border/60;
+    box-shadow: var(--shadow-card);
   }
 
   .glass-hover {
-    @apply hover:bg-accent/80 hover:border-border transition-all duration-200;
+    @apply hover:border-border transition-all duration-300;
+  }
+
+  .glass-hover:hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .card-elevated {
+    @apply bg-card border border-border/50 rounded-xl;
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-elevated:hover {
+    box-shadow: var(--shadow-card-hover);
+    border-color: hsl(var(--border));
+    transform: translateY(-2px);
+  }
+
+  .card-interactive {
+    @apply bg-card border border-border/40 rounded-xl;
+    box-shadow: 0 1px 2px hsl(222 47% 11% / 0.03);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-interactive:hover {
+    @apply border-primary/20;
+    box-shadow: 0 4px 16px hsl(199 89% 48% / 0.1), 0 2px 8px hsl(222 47% 11% / 0.05);
   }
 
   .gradient-text {
@@ -138,6 +170,10 @@
 
   .glow {
     box-shadow: var(--shadow-glow);
+  }
+
+  .subtle-ring {
+    @apply ring-1 ring-border/30 ring-offset-0;
   }
 
   .animate-fade-in {
