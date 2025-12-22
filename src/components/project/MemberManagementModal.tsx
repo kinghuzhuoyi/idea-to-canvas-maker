@@ -27,7 +27,10 @@ import {
   Mail,
   Calendar,
   Clock,
+  CheckCircle2,
 } from 'lucide-react';
+import { AddMemberForm } from './AddMemberForm';
+import { toast } from 'sonner';
 
 interface MemberManagementModalProps {
   open: boolean;
@@ -59,14 +62,32 @@ export function MemberManagementModal({
   projectName,
 }: MemberManagementModalProps) {
   const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [localMembers, setLocalMembers] = useState(members);
   
   const canManage = currentUserRole === 'admin';
 
   const stats: ProjectStats = {
-    totalMembers: members.length,
-    adminCount: members.filter(m => m.role === 'admin').length,
-    editorCount: members.filter(m => m.role === 'editor').length,
-    viewerCount: members.filter(m => m.role === 'viewer').length,
+    totalMembers: localMembers.length,
+    adminCount: localMembers.filter(m => m.role === 'admin').length,
+    editorCount: localMembers.filter(m => m.role === 'editor').length,
+    viewerCount: localMembers.filter(m => m.role === 'viewer').length,
+  };
+
+  const handleAddMember = (user: { id: string; name: string; email: string }, role: UserRole) => {
+    const newMember: Member = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: role,
+      joinedAt: new Date().toISOString().split('T')[0],
+    };
+    setLocalMembers(prev => [newMember, ...prev]);
+    setShowAddForm(false);
+    toast.success(`已添加成员 ${user.name}`, {
+      description: `角色：${roleLabels[role]}`,
+      icon: <CheckCircle2 className="h-4 w-4 text-success" />,
+    });
   };
 
   return (
@@ -102,10 +123,21 @@ export function MemberManagementModal({
           </div>
         </div>
 
+        {/* 添加成员表单 */}
+        {showAddForm && canManage && (
+          <div className="px-4 pt-4">
+            <AddMemberForm
+              onAdd={handleAddMember}
+              onCancel={() => setShowAddForm(false)}
+              existingMemberEmails={localMembers.map(m => m.email)}
+            />
+          </div>
+        )}
+
         {/* 成员列表 */}
         <ScrollArea className="flex-1 max-h-[400px]">
           <div className="p-4 space-y-2">
-            {members.map((member, index) => {
+            {localMembers.map((member, index) => {
               const RoleIcon = roleIcons[member.role];
               return (
                 <div
@@ -189,7 +221,12 @@ export function MemberManagementModal({
               <Button variant="outline" size="sm">
                 批量管理
               </Button>
-              <Button size="sm" variant="glow">
+              <Button 
+                size="sm" 
+                variant="glow"
+                onClick={() => setShowAddForm(true)}
+                disabled={showAddForm}
+              >
                 <UserPlus className="h-4 w-4 mr-2" />
                 添加成员
               </Button>

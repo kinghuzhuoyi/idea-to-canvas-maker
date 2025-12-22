@@ -224,3 +224,81 @@ export const mockMembers: Record<string, Member[]> = {
     { id: 'm26', name: '唐四', email: 'tangsi@company.com', role: 'viewer', joinedAt: '2024-10-15' },
   ],
 };
+
+// 可邀请的用户池（用于添加成员）
+export const mockAvailableUsers = [
+  { id: 'u1', name: '钱一', email: 'qianyi@company.com' },
+  { id: 'u2', name: '孔二', email: 'konger@company.com' },
+  { id: 'u3', name: '曹三', email: 'caosan@company.com' },
+  { id: 'u4', name: '严四', email: 'yansi@company.com' },
+  { id: 'u5', name: '华五', email: 'huawu@company.com' },
+  { id: 'u6', name: '金六', email: 'jinliu@company.com' },
+  { id: 'u7', name: '魏七', email: 'weiqi@company.com' },
+  { id: 'u8', name: '陶八', email: 'taoba@company.com' },
+  { id: 'u9', name: '姜九', email: 'jiangjiu@company.com' },
+  { id: 'u10', name: '戚十', email: 'qishi@company.com' },
+];
+
+// 可搜索的公开项目（用于加入项目）
+export const mockSearchableProjects: Project[] = [
+  {
+    id: 'sp1',
+    name: '智能投顾系统',
+    description: '基于AI的智能投资顾问决策引擎，提供个性化投资建议。',
+    createdAt: '2024-05-01',
+    updatedAt: '2024-12-18',
+    memberCount: 15,
+    userRole: 'viewer',
+    strategyCount: 25,
+  },
+  {
+    id: 'sp2',
+    name: '智慧城市交通',
+    description: '城市交通流量预测与信号灯智能调度系统。',
+    createdAt: '2024-06-15',
+    updatedAt: '2024-12-17',
+    memberCount: 10,
+    userRole: 'viewer',
+    strategyCount: 18,
+  },
+  {
+    id: 'sp3',
+    name: '医疗诊断辅助',
+    description: '基于症状分析的智能诊断建议与用药推荐。',
+    createdAt: '2024-07-01',
+    updatedAt: '2024-12-16',
+    memberCount: 8,
+    userRole: 'viewer',
+    strategyCount: 12,
+  },
+  {
+    id: 'sp4',
+    name: '能源管理平台',
+    description: '工业园区能耗监测与节能策略优化系统。',
+    createdAt: '2024-08-01',
+    updatedAt: '2024-12-15',
+    memberCount: 6,
+    userRole: 'viewer',
+    strategyCount: 9,
+  },
+  {
+    id: 'sp5',
+    name: '智能安防监控',
+    description: '视频分析与异常行为检测决策平台。',
+    createdAt: '2024-09-01',
+    updatedAt: '2024-12-14',
+    memberCount: 12,
+    userRole: 'viewer',
+    strategyCount: 15,
+  },
+  {
+    id: 'sp6',
+    name: '教育个性化推荐',
+    description: '学习路径规划与课程智能推荐系统。',
+    createdAt: '2024-10-01',
+    updatedAt: '2024-12-13',
+    memberCount: 7,
+    userRole: 'viewer',
+    strategyCount: 11,
+  },
+];
