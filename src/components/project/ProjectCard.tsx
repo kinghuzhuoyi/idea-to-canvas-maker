@@ -1,7 +1,7 @@
 import { Project, UserRole } from '@/types/project';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Briefcase, LogOut } from 'lucide-react';
+import { Folder, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ProjectCardProps {
@@ -35,7 +35,7 @@ export function ProjectCard({ project, isSelected, onClick, onLeave }: ProjectCa
           'w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors',
           isSelected ? 'bg-primary/20' : 'bg-muted'
         )}>
-          <Briefcase className={cn(
+          <Folder className={cn(
             'h-5 w-5',
             isSelected ? 'text-primary' : 'text-muted-foreground'
           )} />
