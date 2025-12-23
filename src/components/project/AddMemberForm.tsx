@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -36,6 +36,36 @@ interface AddMemberFormProps {
   existingMemberEmails: string[];
 }
 
+// 将 RoleSelector 提取为独立的 memo 组件，避免重复渲染导致的闪烁
+const RoleSelector = memo(({ value, onChange }: { value: UserRole; onChange: (role: UserRole) => void }) => (
+  <Select value={value} onValueChange={(v) => onChange(v as UserRole)}>
+    <SelectTrigger className="w-[100px] h-7 text-xs">
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent className="z-[200]">
+      <SelectItem value="admin">
+        <span className="flex items-center gap-1.5">
+          <Shield className="h-3 w-3 text-primary" />
+          管理者
+        </span>
+      </SelectItem>
+      <SelectItem value="editor">
+        <span className="flex items-center gap-1.5">
+          <Pencil className="h-3 w-3 text-success" />
+          编辑者
+        </span>
+      </SelectItem>
+      <SelectItem value="viewer">
+        <span className="flex items-center gap-1.5">
+          <Eye className="h-3 w-3 text-muted-foreground" />
+          查看者
+        </span>
+      </SelectItem>
+    </SelectContent>
+  </Select>
+));
+RoleSelector.displayName = 'RoleSelector';
+
 export function AddMemberForm({ onAdd, onCancel, existingMemberEmails }: AddMemberFormProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<SelectedUserWithRole[]>([]);
@@ -46,33 +76,41 @@ export function AddMemberForm({ onAdd, onCancel, existingMemberEmails }: AddMemb
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // 获取已选择的用户邮箱列表
-  const selectedEmails = selectedUsers.map(su => su.user.email);
+  // 使用 useMemo 缓存已选择的用户邮箱列表，避免每次渲染都创建新数组
+  const selectedEmailsSet = useMemo(() => 
+    new Set(selectedUsers.map(su => su.user.email)), 
+    [selectedUsers]
+  );
+  
+  // 使用 ref 存储最新的过滤条件，避免 useCallback 依赖变化导致的闪烁
+  const filterRef = useRef({ existingMemberEmails, selectedEmailsSet });
+  filterRef.current = { existingMemberEmails, selectedEmailsSet };
 
-  // 防抖搜索
+  // 防抖搜索 - 移除对 selectedEmails 的依赖，使用 ref 获取最新值
   const searchUsers = useCallback((query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
       setIsPopoverOpen(false);
+      setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
     
-    setTimeout(() => {
-      const results = mockAvailableUsers.filter(user => 
-        !existingMemberEmails.includes(user.email) &&
-        !selectedEmails.includes(user.email) &&
-        (user.name.toLowerCase().includes(query.toLowerCase()) ||
-         user.email.toLowerCase().includes(query.toLowerCase()))
-      );
-      setSearchResults(results);
-      setIsPopoverOpen(true);
-      setHighlightedIndex(-1);
-      setIsSearching(false);
-    }, 300);
-  }, [existingMemberEmails, selectedEmails]);
+    const { existingMemberEmails, selectedEmailsSet } = filterRef.current;
+    const results = mockAvailableUsers.filter(user => 
+      !existingMemberEmails.includes(user.email) &&
+      !selectedEmailsSet.has(user.email) &&
+      (user.name.toLowerCase().includes(query.toLowerCase()) ||
+       user.email.toLowerCase().includes(query.toLowerCase()))
+    );
+    setSearchResults(results);
+    setIsPopoverOpen(results.length > 0 || query.includes('@'));
+    setHighlightedIndex(-1);
+    setIsSearching(false);
+  }, []);
 
+  // 使用单一防抖 effect
   useEffect(() => {
     const timer = setTimeout(() => {
       searchUsers(searchQuery);
@@ -141,41 +179,20 @@ export function AddMemberForm({ onAdd, onCancel, existingMemberEmails }: AddMemb
     }
   };
 
-  const isNewEmail = searchQuery.includes('@') && 
+  // 使用 useMemo 缓存新邮箱判断和结果列表
+  const isNewEmail = useMemo(() => 
+    searchQuery.includes('@') && 
     !mockAvailableUsers.some(u => u.email === searchQuery) &&
     !existingMemberEmails.includes(searchQuery) &&
-    !selectedEmails.includes(searchQuery);
+    !selectedEmailsSet.has(searchQuery),
+    [searchQuery, existingMemberEmails, selectedEmailsSet]
+  );
 
-  const allResults = isNewEmail 
-    ? [...searchResults, { id: 'new', name: searchQuery.split('@')[0], email: searchQuery, isNew: true }]
-    : searchResults;
-
-  const RoleSelector = ({ value, onChange }: { value: UserRole; onChange: (role: UserRole) => void }) => (
-    <Select value={value} onValueChange={(v) => onChange(v as UserRole)}>
-      <SelectTrigger className="w-[100px] h-7 text-xs">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="admin">
-          <span className="flex items-center gap-1.5">
-            <Shield className="h-3 w-3 text-primary" />
-            管理者
-          </span>
-        </SelectItem>
-        <SelectItem value="editor">
-          <span className="flex items-center gap-1.5">
-            <Pencil className="h-3 w-3 text-success" />
-            编辑者
-          </span>
-        </SelectItem>
-        <SelectItem value="viewer">
-          <span className="flex items-center gap-1.5">
-            <Eye className="h-3 w-3 text-muted-foreground" />
-            查看者
-          </span>
-        </SelectItem>
-      </SelectContent>
-    </Select>
+  const allResults = useMemo(() => 
+    isNewEmail 
+      ? [...searchResults, { id: 'new', name: searchQuery.split('@')[0], email: searchQuery, isNew: true }]
+      : searchResults,
+    [isNewEmail, searchResults, searchQuery]
   );
 
   return (
@@ -229,17 +246,12 @@ export function AddMemberForm({ onAdd, onCancel, existingMemberEmails }: AddMemb
             </div>
           </PopoverTrigger>
           <PopoverContent 
-            className="w-[var(--radix-popover-trigger-width)] p-0" 
+            className="w-[var(--radix-popover-trigger-width)] p-0 z-[200] bg-popover border border-border shadow-lg" 
             align="start"
             sideOffset={4}
             onOpenAutoFocus={(e) => e.preventDefault()}
           >
-            {isSearching ? (
-              <div className="p-4 flex items-center justify-center gap-2 text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                搜索中...
-              </div>
-            ) : allResults.length > 0 ? (
+            {allResults.length > 0 ? (
               <div className="max-h-64 overflow-y-auto py-1">
                 {allResults.map((user, index) => {
                   const isNew = 'isNew' in user && user.isNew;
