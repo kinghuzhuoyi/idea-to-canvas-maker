@@ -15,6 +15,13 @@ export interface Project {
     reason?: string;
     status: 'pending' | 'approved' | 'rejected';
   };
+  // 权限升级申请信息（仅查看者角色使用）
+  upgradeApplication?: {
+    targetRole: 'editor' | 'admin';
+    appliedAt: string;
+    reason?: string;
+    status: 'pending' | 'approved' | 'rejected';
+  };
 }
 
 export interface Strategy {

@@ -30,6 +30,12 @@ export const mockProjects: Project[] = [
     memberCount: 3,
     userRole: 'viewer',
     strategyCount: 5,
+    upgradeApplication: {
+      targetRole: 'editor',
+      appliedAt: '2024-12-18 14:30',
+      reason: '需要参与工单路由策略的编辑工作',
+      status: 'pending',
+    },
   },
   {
     id: '4',

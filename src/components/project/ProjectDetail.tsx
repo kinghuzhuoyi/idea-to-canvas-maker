@@ -2,6 +2,7 @@ import { Project, Strategy, UserRole } from '@/types/project';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StrategyCard } from './StrategyCard';
+import { UpgradeProgressCard } from './UpgradeProgressCard';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Calendar,
@@ -11,6 +12,7 @@ import {
   Download,
   Settings,
   FileText,
+  ArrowUpCircle,
 } from 'lucide-react';
 
 interface ProjectDetailProps {
@@ -18,6 +20,8 @@ interface ProjectDetailProps {
   strategies: Strategy[];
   onMemberClick: () => void;
   onCreateStrategy?: () => void;
+  onUpgradeRole?: () => void;
+  onWithdrawUpgrade?: () => void;
 }
 
 const roleLabels: Record<UserRole, string> = {
@@ -32,8 +36,12 @@ export function ProjectDetail({
   strategies,
   onMemberClick,
   onCreateStrategy,
+  onUpgradeRole,
+  onWithdrawUpgrade,
 }: ProjectDetailProps) {
   const canCreate = project.userRole === 'admin' || project.userRole === 'editor';
+  const isViewer = project.userRole === 'viewer';
+  const hasUpgradeApplication = project.upgradeApplication?.status === 'pending';
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
@@ -52,12 +60,20 @@ export function ProjectDetail({
             </p>
           </div>
           
-          {project.userRole === 'admin' && (
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              项目设置
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {isViewer && !hasUpgradeApplication && onUpgradeRole && (
+              <Button variant="outline" size="sm" onClick={onUpgradeRole}>
+                <ArrowUpCircle className="h-4 w-4 mr-2" />
+                申请权限升级
+              </Button>
+            )}
+            {project.userRole === 'admin' && (
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                项目设置
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-6 text-sm">
@@ -77,6 +93,19 @@ export function ProjectDetail({
             <span>{project.memberCount} 名成员</span>
           </button>
         </div>
+
+        {/* 权限升级进度卡片 */}
+        {hasUpgradeApplication && project.upgradeApplication && onWithdrawUpgrade && (
+          <div className="mt-4">
+            <UpgradeProgressCard
+              targetRole={project.upgradeApplication.targetRole}
+              appliedAt={project.upgradeApplication.appliedAt}
+              reason={project.upgradeApplication.reason}
+              status={project.upgradeApplication.status}
+              onWithdraw={onWithdrawUpgrade}
+            />
+          </div>
+        )}
       </div>
 
       {/* 策略列表头部 */}
