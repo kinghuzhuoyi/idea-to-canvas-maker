@@ -7,6 +7,7 @@ import { EmptyProjectState } from '@/components/project/EmptyProjectState';
 import { MemberManagementModal } from '@/components/project/MemberManagementModal';
 import { JoinProjectModal } from '@/components/project/JoinProjectModal';
 import { LeaveProjectDialog } from '@/components/project/LeaveProjectDialog';
+import { UpgradeRoleModal } from '@/components/project/UpgradeRoleModal';
 import { mockProjects, mockStrategies, mockMembers } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,6 +17,7 @@ const Index = () => {
   const [joinModalOpen, setJoinModalOpen] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [projectToLeave, setProjectToLeave] = useState<string | null>(null);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   
   const { toast } = useToast();
 
@@ -57,6 +59,20 @@ const Index = () => {
     setSelectedProjectId(null);
   };
 
+  const handleUpgradeRole = (reason: string) => {
+    toast({
+      title: '升级申请已提交',
+      description: '您的权限升级申请已发送，请等待管理员审批。',
+    });
+  };
+
+  const handleWithdrawUpgrade = () => {
+    toast({
+      title: '申请已撤回',
+      description: '您的权限升级申请已成功撤回。',
+    });
+  };
+
   const projectToLeaveName = projectToLeave 
     ? mockProjects.find(p => p.id === projectToLeave)?.name || ''
     : '';
@@ -92,6 +108,8 @@ const Index = () => {
                     description: '新建策略功能即将上线。',
                   });
                 }}
+                onUpgradeRole={() => setUpgradeModalOpen(true)}
+                onWithdrawUpgrade={handleWithdrawUpgrade}
               />
             )
           ) : (
@@ -125,6 +143,16 @@ const Index = () => {
         projectName={projectToLeaveName}
         onConfirm={confirmLeaveProject}
       />
+
+      {/* 权限升级申请弹窗 */}
+      {selectedProject && (
+        <UpgradeRoleModal
+          open={upgradeModalOpen}
+          onOpenChange={setUpgradeModalOpen}
+          projectName={selectedProject.name}
+          onSubmit={handleUpgradeRole}
+        />
+      )}
     </div>
   );
 };
