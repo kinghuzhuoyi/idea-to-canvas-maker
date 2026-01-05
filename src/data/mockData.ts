@@ -87,6 +87,16 @@ export const mockProjects: Project[] = [
       status: 'pending',
     },
   },
+  {
+    id: '8',
+    name: '质量管理系统',
+    description: '生产线质量检测与缺陷分析决策平台，支持实时质检和问题追溯。',
+    createdAt: '2024-07-20',
+    updatedAt: '2024-12-12',
+    memberCount: 5,
+    userRole: 'viewer',
+    strategyCount: 7,
+  },
 ];
 
 export const mockStrategies: Record<string, Strategy[]> = {
@@ -190,6 +200,26 @@ export const mockStrategies: Record<string, Strategy[]> = {
       projectId: '5',
     },
   ],
+  '8': [
+    {
+      id: 's11',
+      code: 'QM-001',
+      name: '缺陷检测规则',
+      description: '基于图像识别的产品缺陷自动检测策略。',
+      updatedAt: '2024-12-12',
+      status: 'active',
+      projectId: '8',
+    },
+    {
+      id: 's12',
+      code: 'QM-002',
+      name: '质量追溯流程',
+      description: '产品质量问题的全链路追溯决策流程。',
+      updatedAt: '2024-12-10',
+      status: 'active',
+      projectId: '8',
+    },
+  ],
 };
 
 export const mockMembers: Record<string, Member[]> = {
@@ -228,6 +258,13 @@ export const mockMembers: Record<string, Member[]> = {
     { id: 'm24', name: '谢二', email: 'xieer@company.com', role: 'editor', joinedAt: '2024-09-15' },
     { id: 'm25', name: '韩三', email: 'hansan@company.com', role: 'editor', joinedAt: '2024-10-01' },
     { id: 'm26', name: '唐四', email: 'tangsi@company.com', role: 'viewer', joinedAt: '2024-10-15' },
+  ],
+  '8': [
+    { id: 'm27', name: '范一', email: 'fanyi@company.com', role: 'admin', joinedAt: '2024-07-20' },
+    { id: 'm28', name: '彭二', email: 'penger@company.com', role: 'editor', joinedAt: '2024-08-01' },
+    { id: 'm29', name: '鲁三', email: 'lusan@company.com', role: 'editor', joinedAt: '2024-08-15' },
+    { id: 'm30', name: '韦四', email: 'weisi@company.com', role: 'viewer', joinedAt: '2024-09-01' },
+    { id: 'm31', name: '昌五', email: 'changwu@company.com', role: 'viewer', joinedAt: '2024-09-15' },
   ],
 };
 
