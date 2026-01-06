@@ -12,12 +12,6 @@ interface StrategyCardProps {
   onDelete?: () => void;
 }
 
-const statusLabels: Record<Strategy['status'], string> = {
-  active: '生效中',
-  inactive: '已停用',
-  draft: '草稿',
-};
-
 export function StrategyCard({ strategy, userRole, onView, onEdit, onDelete }: StrategyCardProps) {
   const canEdit = userRole === 'admin' || userRole === 'editor';
   const canDelete = userRole === 'admin';
@@ -31,8 +25,8 @@ export function StrategyCard({ strategy, userRole, onView, onEdit, onDelete }: S
               <Hash className="h-3 w-3" />
               <span className="font-mono">{strategy.code}</span>
             </div>
-            <Badge variant={strategy.status}>
-              {statusLabels[strategy.status]}
+            <Badge variant={strategy.referenced ? 'referenced' : 'unreferenced'}>
+              {strategy.referenced ? '引用中' : '未引用'}
             </Badge>
           </div>
           <h4 className="font-medium text-foreground mb-1.5 truncate">
