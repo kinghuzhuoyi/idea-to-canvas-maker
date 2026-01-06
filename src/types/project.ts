@@ -30,7 +30,7 @@ export interface Strategy {
   name: string;
   description: string;
   updatedAt: string;
-  status: 'active' | 'inactive' | 'draft';
+  referenced: boolean; // true: 引用中, false: 未引用
   projectId: string;
 }
 
