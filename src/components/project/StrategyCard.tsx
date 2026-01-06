@@ -1,7 +1,7 @@
-import { Strategy } from '@/types/project';
+import { Strategy, PublishStatus } from '@/types/project';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Pencil, Trash2, Calendar, Hash } from 'lucide-react';
+import { Eye, Pencil, Trash2, Calendar, Hash, Activity, AlertTriangle, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import { UserRole } from '@/types/project';
 
 interface StrategyCardProps {
@@ -12,15 +12,34 @@ interface StrategyCardProps {
   onDelete?: () => void;
 }
 
+const publishStatusConfig: Record<PublishStatus, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive'; icon: React.ReactNode }> = {
+  none: { label: '未发布', variant: 'outline', icon: null },
+  approving: { label: '审批中', variant: 'secondary', icon: <Clock className="h-3 w-3" /> },
+  grayscale: { label: '灰度中', variant: 'default', icon: <Loader2 className="h-3 w-3" /> },
+  published: { label: '已发布', variant: 'default', icon: <CheckCircle className="h-3 w-3" /> },
+};
+
+function formatNumber(num: number): string {
+  if (num >= 10000) {
+    return (num / 10000).toFixed(1) + 'w';
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'k';
+  }
+  return num.toString();
+}
+
 export function StrategyCard({ strategy, userRole, onView, onEdit, onDelete }: StrategyCardProps) {
   const canEdit = userRole === 'admin' || userRole === 'editor';
   const canDelete = userRole === 'admin';
+  const statusConfig = publishStatusConfig[strategy.publishStatus];
+  const hasMetrics = strategy.metrics.todayCalls > 0;
 
   return (
     <div className="group card-elevated p-5 animate-slide-up hover:border-primary/20">
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Hash className="h-3 w-3" />
               <span className="font-mono">{strategy.code}</span>
@@ -28,6 +47,15 @@ export function StrategyCard({ strategy, userRole, onView, onEdit, onDelete }: S
             <Badge variant={strategy.referenced ? 'referenced' : 'unreferenced'}>
               {strategy.referenced ? '引用中' : '未引用'}
             </Badge>
+            {strategy.publishStatus !== 'none' && (
+              <Badge 
+                variant={statusConfig.variant}
+                className="gap-1"
+              >
+                {statusConfig.icon}
+                {statusConfig.label}
+              </Badge>
+            )}
           </div>
           <h4 className="font-medium text-foreground mb-1.5 truncate">
             {strategy.name}
@@ -38,7 +66,29 @@ export function StrategyCard({ strategy, userRole, onView, onEdit, onDelete }: S
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-3 border-t border-border/50">
+      {/* 指标数据展示 */}
+      {hasMetrics && (
+        <div className="flex items-center gap-4 py-3 border-t border-b border-border/50 mb-3">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-primary" />
+            <div className="text-sm">
+              <span className="text-muted-foreground">今日调用</span>
+              <span className="ml-1.5 font-medium text-foreground">{formatNumber(strategy.metrics.todayCalls)}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className={`h-4 w-4 ${strategy.metrics.errorRate > 0.2 ? 'text-destructive' : 'text-muted-foreground'}`} />
+            <div className="text-sm">
+              <span className="text-muted-foreground">异常率</span>
+              <span className={`ml-1.5 font-medium ${strategy.metrics.errorRate > 0.2 ? 'text-destructive' : 'text-foreground'}`}>
+                {strategy.metrics.errorRate.toFixed(2)}%
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={`flex items-center justify-between ${!hasMetrics ? 'pt-3 border-t border-border/50' : ''}`}>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Calendar className="h-3 w-3" />
           <span>更新于 {strategy.updatedAt}</span>

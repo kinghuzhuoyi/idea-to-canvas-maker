@@ -1,7 +1,7 @@
 import { Project, Strategy, UserRole } from '@/types/project';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { StrategyCard } from './StrategyCard';
+import { StrategyList } from './StrategyList';
 import { UpgradeProgressCard } from './UpgradeProgressCard';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -134,40 +134,11 @@ export function ProjectDetail({
 
       {/* 策略列表 */}
       <ScrollArea className="flex-1 p-6">
-        {strategies.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {strategies.map((strategy, index) => (
-              <div
-                key={strategy.id}
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <StrategyCard
-                  strategy={strategy}
-                  userRole={project.userRole}
-                  onView={() => {}}
-                  onEdit={() => {}}
-                  onDelete={() => {}}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-              <FileText className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h4 className="font-medium mb-2">暂无策略</h4>
-            <p className="text-sm text-muted-foreground mb-4">
-              该项目还没有创建任何策略
-            </p>
-            {canCreate && (
-              <Button onClick={onCreateStrategy} variant="glow">
-                <Plus className="h-4 w-4 mr-2" />
-                创建第一个策略
-              </Button>
-            )}
-          </div>
-        )}
+        <StrategyList
+          strategies={strategies}
+          userRole={project.userRole}
+          onCreateStrategy={onCreateStrategy}
+        />
       </ScrollArea>
     </div>
   );

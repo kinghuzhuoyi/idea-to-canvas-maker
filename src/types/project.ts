@@ -24,6 +24,13 @@ export interface Project {
   };
 }
 
+export type PublishStatus = 'none' | 'approving' | 'grayscale' | 'published';
+
+export interface StrategyMetrics {
+  todayCalls: number;
+  errorRate: number; // 百分比，例如 0.5 表示 0.5%
+}
+
 export interface Strategy {
   id: string;
   code: string;
@@ -32,6 +39,8 @@ export interface Strategy {
   updatedAt: string;
   referenced: boolean; // true: 引用中, false: 未引用
   projectId: string;
+  publishStatus: PublishStatus; // 版本发布状态
+  metrics: StrategyMetrics; // 调用量和异常率
 }
 
 export interface Member {
