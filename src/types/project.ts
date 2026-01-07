@@ -58,3 +58,54 @@ export interface ProjectStats {
   editorCount: number;
   viewerCount: number;
 }
+
+// 策略详情指标
+export interface StrategyDetailMetrics {
+  passRate: number;           // 通过率 %
+  errorRate: number;          // 异常率 %
+  tp99: number;               // TP99耗时 ms
+  todayCalls: number;         // 今日调用量
+  callsCompare: number;       // 环比增长 %
+  passCount: number;          // 通过数量
+  sameTermPassRate: number;   // 同期通过率 %
+  errorCount: number;         // 异常数量
+}
+
+// 版本状态
+export type VersionStatus = 'effective' | 'grayscale' | 'draft';
+
+// 策略版本
+export interface StrategyVersion {
+  id: string;
+  versionNumber: string;
+  description: string;
+  status: VersionStatus;
+  updatedAt: string;
+  updatedBy: string;
+  publishedAt?: string;
+}
+
+// 版本发布记录
+export interface VersionReleaseRecord {
+  id: string;
+  versionNumber: string;
+  action: 'published' | 'rollback' | 'grayscale';
+  timestamp: string;
+  operator: string;
+}
+
+// 策略变更记录
+export interface StrategyChangeRecord {
+  id: string;
+  type: 'status_change' | 'version_release' | 'config_update';
+  description: string;
+  timestamp: string;
+  operator: string;
+}
+
+// 指标趋势数据点
+export interface MetricTrendPoint {
+  time: string;
+  value: number;
+  compareValue?: number;
+}
