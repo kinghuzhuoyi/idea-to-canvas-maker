@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Strategy, PublishStatus } from '@/types/project';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,13 +31,21 @@ function formatNumber(num: number): string {
 }
 
 export function StrategyCard({ strategy, userRole, onView, onEdit, onDelete }: StrategyCardProps) {
+  const navigate = useNavigate();
   const canEdit = userRole === 'admin' || userRole === 'editor';
   const canDelete = userRole === 'admin';
   const statusConfig = publishStatusConfig[strategy.publishStatus];
   const hasMetrics = strategy.metrics.todayCalls > 0;
 
+  const handleCardClick = () => {
+    navigate(`/project/${strategy.projectId}/strategy/${strategy.id}`);
+  };
+
   return (
-    <div className="group card-elevated p-5 animate-slide-up hover:border-primary/20 flex flex-col h-full min-h-[220px]">
+    <div 
+      className="group card-elevated p-5 animate-slide-up hover:border-primary/20 flex flex-col h-full min-h-[220px] cursor-pointer transition-all hover:shadow-lg"
+      onClick={handleCardClick}
+    >
       <div className="flex items-start justify-between gap-4 mb-3 flex-shrink-0">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -100,11 +109,19 @@ export function StrategyCard({ strategy, userRole, onView, onEdit, onDelete }: S
           </div>
 
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="icon-sm" onClick={onView}>
+            <Button 
+              variant="ghost" 
+              size="icon-sm" 
+              onClick={(e) => { e.stopPropagation(); onView(); }}
+            >
               <Eye className="h-4 w-4" />
             </Button>
             {canEdit && onEdit && (
-              <Button variant="ghost" size="icon-sm" onClick={onEdit}>
+              <Button 
+                variant="ghost" 
+                size="icon-sm" 
+                onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              >
                 <Pencil className="h-4 w-4" />
               </Button>
             )}
@@ -112,7 +129,7 @@ export function StrategyCard({ strategy, userRole, onView, onEdit, onDelete }: S
               <Button 
                 variant="ghost" 
                 size="icon-sm" 
-                onClick={onDelete}
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
                 className="hover:text-destructive hover:bg-destructive/10"
               >
                 <Trash2 className="h-4 w-4" />
