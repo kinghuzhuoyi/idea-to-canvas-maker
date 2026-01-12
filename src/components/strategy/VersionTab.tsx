@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StrategyVersion, UserRole } from '@/types/project';
 import { VersionTable } from './VersionTable';
+import { VersionStatusCards } from './VersionStatusCards';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -14,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Slider } from '@/components/ui/slider';
 import { Plus, GitBranch } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -22,13 +24,14 @@ interface VersionTabProps {
   userRole: UserRole;
 }
 
-type ModalType = 'create' | 'publish' | 'rollback' | 'history' | null;
+type ModalType = 'create' | 'publish' | 'rollback' | 'history' | 'terminate' | 'adjustTraffic' | 'fullPublish' | 'rollbackGrayscale' | null;
 
 export function VersionTab({ versions, userRole }: VersionTabProps) {
   const [modalType, setModalType] = useState<ModalType>(null);
   const [selectedVersion, setSelectedVersion] = useState<StrategyVersion | null>(null);
   const [newVersionNumber, setNewVersionNumber] = useState('');
   const [newVersionDesc, setNewVersionDesc] = useState('');
+  const [trafficRatio, setTrafficRatio] = useState([20]);
 
   const canCreate = userRole === 'admin' || userRole === 'editor';
 
@@ -59,6 +62,38 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
     }
   };
 
+  const handleTerminateApproval = () => {
+    if (selectedVersion) {
+      toast.success(`版本 ${selectedVersion.versionNumber} 审批已终止`);
+      setModalType(null);
+      setSelectedVersion(null);
+    }
+  };
+
+  const handleAdjustTraffic = () => {
+    if (selectedVersion) {
+      toast.success(`灰度流量已调整为 ${trafficRatio[0]}%`);
+      setModalType(null);
+      setSelectedVersion(null);
+    }
+  };
+
+  const handleFullPublish = () => {
+    if (selectedVersion) {
+      toast.success(`版本 ${selectedVersion.versionNumber} 已全量发布`);
+      setModalType(null);
+      setSelectedVersion(null);
+    }
+  };
+
+  const handleRollbackGrayscale = () => {
+    if (selectedVersion) {
+      toast.success(`灰度版本 ${selectedVersion.versionNumber} 已回滚`);
+      setModalType(null);
+      setSelectedVersion(null);
+    }
+  };
+
   const handleCopy = (version: StrategyVersion) => {
     toast.success(`版本 ${version.versionNumber} 已复制`);
   };
@@ -67,8 +102,46 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
     toast.info(`查看版本 ${version.versionNumber} 详情`);
   };
 
+  const handleExport = (version: StrategyVersion) => {
+    toast.success(`版本 ${version.versionNumber} 已导出`);
+  };
+
+  const handleRefreshApproval = (version: StrategyVersion) => {
+    toast.success(`版本 ${version.versionNumber} 审批状态已刷新`);
+  };
+
+  const handleRefreshGrayscale = (version: StrategyVersion) => {
+    toast.success(`版本 ${version.versionNumber} 灰度状态已刷新`);
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Version Status Cards */}
+      <VersionStatusCards
+        versions={versions}
+        userRole={userRole}
+        onRefreshApproval={handleRefreshApproval}
+        onTerminateApproval={(v) => {
+          setSelectedVersion(v);
+          setModalType('terminate');
+        }}
+        onRefreshGrayscale={handleRefreshGrayscale}
+        onAdjustTraffic={(v) => {
+          setSelectedVersion(v);
+          setTrafficRatio([v.grayscaleInfo?.trafficRatio || 20]);
+          setModalType('adjustTraffic');
+        }}
+        onFullPublish={(v) => {
+          setSelectedVersion(v);
+          setModalType('fullPublish');
+        }}
+        onRollbackGrayscale={(v) => {
+          setSelectedVersion(v);
+          setModalType('rollbackGrayscale');
+        }}
+      />
+
+      {/* Version List Table */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -102,6 +175,7 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
               setModalType('history');
             }}
             onView={handleView}
+            onExport={handleExport}
           />
         </CardContent>
       </Card>
@@ -177,6 +251,100 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
               取消
             </Button>
             <Button variant="destructive" onClick={handleRollback}>
+              确认回滚
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 终止审批弹窗 */}
+      <Dialog open={modalType === 'terminate'} onOpenChange={() => setModalType(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>终止审批</DialogTitle>
+            <DialogDescription>
+              确定要终止版本 {selectedVersion?.versionNumber} 的审批流程吗？终止后需要重新发起审批。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalType(null)}>
+              取消
+            </Button>
+            <Button variant="destructive" onClick={handleTerminateApproval}>
+              确认终止
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 调整流量弹窗 */}
+      <Dialog open={modalType === 'adjustTraffic'} onOpenChange={() => setModalType(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>调整灰度流量</DialogTitle>
+            <DialogDescription>
+              调整版本 {selectedVersion?.versionNumber} 的灰度流量比例。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">灰度流量比例</span>
+              <span className="text-lg font-semibold text-primary">{trafficRatio[0]}%</span>
+            </div>
+            <Slider
+              value={trafficRatio}
+              onValueChange={setTrafficRatio}
+              max={100}
+              step={10}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>0%</span>
+              <span>50%</span>
+              <span>100%</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalType(null)}>
+              取消
+            </Button>
+            <Button onClick={handleAdjustTraffic}>确认调整</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 全量发布弹窗 */}
+      <Dialog open={modalType === 'fullPublish'} onOpenChange={() => setModalType(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>全量发布</DialogTitle>
+            <DialogDescription>
+              确定要将版本 {selectedVersion?.versionNumber} 全量发布吗？灰度版本将正式上线，替换当前生效版本。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalType(null)}>
+              取消
+            </Button>
+            <Button onClick={handleFullPublish}>确认发布</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 灰度回滚弹窗 */}
+      <Dialog open={modalType === 'rollbackGrayscale'} onOpenChange={() => setModalType(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>回滚灰度版本</DialogTitle>
+            <DialogDescription>
+              确定要回滚灰度版本 {selectedVersion?.versionNumber} 吗？回滚后将恢复到当前生效版本。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalType(null)}>
+              取消
+            </Button>
+            <Button variant="destructive" onClick={handleRollbackGrayscale}>
               确认回滚
             </Button>
           </DialogFooter>
