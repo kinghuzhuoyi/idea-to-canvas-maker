@@ -20,6 +20,12 @@ const badgeVariants = cva(
         pending: "border-warning/30 bg-warning/10 text-warning",
         referenced: "border-success/30 bg-success/10 text-success",
         unreferenced: "border-muted-foreground/30 bg-muted text-muted-foreground",
+        // Version status variants
+        effective: "border-primary/30 bg-primary/10 text-primary",
+        approving: "border-amber-500/30 bg-amber-500/10 text-amber-600",
+        grayscale: "border-success/30 bg-success/10 text-success",
+        draft: "border-muted-foreground/30 bg-muted text-muted-foreground",
+        invalid: "border-destructive/30 bg-destructive/10 text-destructive",
       },
     },
     defaultVariants: {

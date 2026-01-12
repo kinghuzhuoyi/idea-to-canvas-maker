@@ -72,7 +72,32 @@ export interface StrategyDetailMetrics {
 }
 
 // 版本状态
-export type VersionStatus = 'effective' | 'grayscale' | 'draft';
+export type VersionStatus = 'effective' | 'grayscale' | 'approving' | 'draft' | 'invalid';
+
+// 审批信息
+export interface ApprovalInfo {
+  approvalId: string;           // OA审批进度ID
+  duration: string;             // 审批停留时长
+  initiator: string;            // 发起人
+  initiatorId: string;          // 发起人ID
+  approver: string;             // 审批人
+  approverId: string;           // 审批人ID
+  initiatedAt: string;          // 发起时间
+  currentNode: string;          // 所在节点
+}
+
+// 灰度信息
+export interface GrayscaleInfo {
+  startTime: string;            // 灰度开始时间
+  duration: string;             // 灰度运行时长
+  trafficRatio: number;         // 灰度流量比例 %
+  operator: string;             // 操作人
+  metrics: {
+    callCount: number;          // 灰度调用量
+    passRate: number;           // 灰度通过率
+    errorRate: number;          // 灰度异常率
+  };
+}
 
 // 策略版本
 export interface StrategyVersion {
@@ -83,6 +108,9 @@ export interface StrategyVersion {
   updatedAt: string;
   updatedBy: string;
   publishedAt?: string;
+  onlineTime?: string;          // 在线时长（生效版本）
+  approvalInfo?: ApprovalInfo;  // 审批信息（审批中状态）
+  grayscaleInfo?: GrayscaleInfo; // 灰度信息（灰度中状态）
 }
 
 // 版本发布记录
