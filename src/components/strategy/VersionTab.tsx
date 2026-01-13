@@ -16,7 +16,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
-import { Plus, GitBranch } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { 
+  Plus, 
+  GitBranch, 
+  AlertTriangle, 
+  CheckCircle2,
+  Info,
+  Rocket,
+  Percent,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 interface VersionTabProps {
@@ -24,33 +41,82 @@ interface VersionTabProps {
   userRole: UserRole;
 }
 
-type ModalType = 'create' | 'publish' | 'rollback' | 'history' | 'terminate' | 'adjustTraffic' | 'fullPublish' | 'rollbackGrayscale' | null;
+type ModalType = 'create' | 'publish' | 'rollback' | 'history' | 'terminate' | 'adjustTraffic' | 'fullPublish' | 'rollbackGrayscale' | 'delete' | null;
+type PublishType = 'direct' | 'grayscale';
 
 export function VersionTab({ versions, userRole }: VersionTabProps) {
   const [modalType, setModalType] = useState<ModalType>(null);
   const [selectedVersion, setSelectedVersion] = useState<StrategyVersion | null>(null);
+  const [selectedVersions, setSelectedVersions] = useState<StrategyVersion[]>([]);
+  
+  // Create version form state
   const [newVersionNumber, setNewVersionNumber] = useState('');
   const [newVersionDesc, setNewVersionDesc] = useState('');
+  const [baseVersion, setBaseVersion] = useState<string>('');
+  const [editAfterCreate, setEditAfterCreate] = useState(false);
+  
+  // Publish form state
+  const [publishType, setPublishType] = useState<PublishType>('direct');
+  const [initialTrafficRatio, setInitialTrafficRatio] = useState([10]);
+  const [publishNote, setPublishNote] = useState('');
+  
+  // Traffic adjustment state
   const [trafficRatio, setTrafficRatio] = useState([20]);
+  const [adjustReason, setAdjustReason] = useState('');
+  
+  // Rollback state
+  const [rollbackReason, setRollbackReason] = useState('');
+  const [keepGrayscale, setKeepGrayscale] = useState(false);
 
   const canCreate = userRole === 'admin' || userRole === 'editor';
+  const effectiveVersion = versions.find(v => v.status === 'effective');
+
+  // Version number validation
+  const isValidVersionNumber = (version: string) => {
+    return /^v\d+\.\d+\.\d+$/.test(version);
+  };
+
+  const resetForms = () => {
+    setNewVersionNumber('');
+    setNewVersionDesc('');
+    setBaseVersion('');
+    setEditAfterCreate(false);
+    setPublishType('direct');
+    setInitialTrafficRatio([10]);
+    setPublishNote('');
+    setTrafficRatio([20]);
+    setAdjustReason('');
+    setRollbackReason('');
+    setKeepGrayscale(false);
+  };
 
   const handleCreateVersion = () => {
     if (!newVersionNumber.trim()) {
       toast.error('请输入版本号');
       return;
     }
+    if (!isValidVersionNumber(newVersionNumber)) {
+      toast.error('版本号格式不正确，请使用 vX.X.X 格式');
+      return;
+    }
     toast.success(`版本 ${newVersionNumber} 创建成功`);
+    if (editAfterCreate) {
+      toast.info('正在跳转到编辑页面...');
+    }
     setModalType(null);
-    setNewVersionNumber('');
-    setNewVersionDesc('');
+    resetForms();
   };
 
   const handlePublish = () => {
     if (selectedVersion) {
-      toast.success(`版本 ${selectedVersion.versionNumber} 已提交发布`);
+      if (publishType === 'grayscale') {
+        toast.success(`版本 ${selectedVersion.versionNumber} 已提交灰度发布，初始流量 ${initialTrafficRatio[0]}%`);
+      } else {
+        toast.success(`版本 ${selectedVersion.versionNumber} 已提交发布审批`);
+      }
       setModalType(null);
       setSelectedVersion(null);
+      resetForms();
     }
   };
 
@@ -59,6 +125,7 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
       toast.success(`已回滚到版本 ${selectedVersion.versionNumber}`);
       setModalType(null);
       setSelectedVersion(null);
+      resetForms();
     }
   };
 
@@ -75,6 +142,7 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
       toast.success(`灰度流量已调整为 ${trafficRatio[0]}%`);
       setModalType(null);
       setSelectedVersion(null);
+      resetForms();
     }
   };
 
@@ -91,6 +159,15 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
       toast.success(`灰度版本 ${selectedVersion.versionNumber} 已回滚`);
       setModalType(null);
       setSelectedVersion(null);
+      resetForms();
+    }
+  };
+
+  const handleDeleteVersions = () => {
+    if (selectedVersions.length > 0) {
+      toast.success(`已删除 ${selectedVersions.length} 个草稿版本`);
+      setModalType(null);
+      setSelectedVersions([]);
     }
   };
 
@@ -106,6 +183,10 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
     toast.success(`版本 ${version.versionNumber} 已导出`);
   };
 
+  const handleEdit = (version: StrategyVersion) => {
+    toast.info(`正在编辑版本 ${version.versionNumber}...`);
+  };
+
   const handleRefreshApproval = (version: StrategyVersion) => {
     toast.success(`版本 ${version.versionNumber} 审批状态已刷新`);
   };
@@ -113,6 +194,9 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
   const handleRefreshGrayscale = (version: StrategyVersion) => {
     toast.success(`版本 ${version.versionNumber} 灰度状态已刷新`);
   };
+
+  // Traffic quick select buttons
+  const trafficPresets = [10, 25, 50, 75, 100];
 
   return (
     <div className="space-y-6">
@@ -176,13 +260,18 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
             }}
             onView={handleView}
             onExport={handleExport}
+            onDelete={(v) => {
+              setSelectedVersions(v);
+              setModalType('delete');
+            }}
+            onEdit={handleEdit}
           />
         </CardContent>
       </Card>
 
-      {/* 新建版本弹窗 */}
-      <Dialog open={modalType === 'create'} onOpenChange={() => setModalType(null)}>
-        <DialogContent>
+      {/* 新建版本弹窗 - Enhanced */}
+      <Dialog open={modalType === 'create'} onOpenChange={() => { setModalType(null); resetForms(); }}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>新建版本</DialogTitle>
             <DialogDescription>
@@ -191,13 +280,38 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="version">版本号</Label>
+              <Label htmlFor="baseVersion">基于版本（可选）</Label>
+              <Select value={baseVersion} onValueChange={setBaseVersion}>
+                <SelectTrigger>
+                  <SelectValue placeholder="从头创建" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">从头创建</SelectItem>
+                  {versions.map(v => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.versionNumber} - {v.description.slice(0, 20)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="version">
+                版本号 <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="version"
                 placeholder="例如: v2.2.0"
                 value={newVersionNumber}
                 onChange={(e) => setNewVersionNumber(e.target.value)}
+                className={newVersionNumber && !isValidVersionNumber(newVersionNumber) ? 'border-destructive' : ''}
               />
+              {newVersionNumber && !isValidVersionNumber(newVersionNumber) && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  请使用 vX.X.X 格式（如 v1.0.0）
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">版本描述</Label>
@@ -209,45 +323,203 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
                 rows={3}
               />
             </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="editAfter" 
+                checked={editAfterCreate}
+                onCheckedChange={(checked) => setEditAfterCreate(!!checked)}
+              />
+              <Label htmlFor="editAfter" className="text-sm font-normal cursor-pointer">
+                创建后立即编辑规则
+              </Label>
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setModalType(null)}>
+            <Button variant="outline" onClick={() => { setModalType(null); resetForms(); }}>
               取消
             </Button>
-            <Button onClick={handleCreateVersion}>创建</Button>
+            <Button onClick={handleCreateVersion} disabled={!newVersionNumber || !isValidVersionNumber(newVersionNumber)}>
+              创建
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* 发布确认弹窗 */}
-      <Dialog open={modalType === 'publish'} onOpenChange={() => setModalType(null)}>
-        <DialogContent>
+      {/* 发布版本弹窗 - Enhanced */}
+      <Dialog open={modalType === 'publish'} onOpenChange={() => { setModalType(null); resetForms(); }}>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>发布版本</DialogTitle>
             <DialogDescription>
-              确定要发布版本 {selectedVersion?.versionNumber} 吗？发布后将进入审批流程。
+              发布版本 {selectedVersion?.versionNumber}，请选择发布方式。
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-6 py-4">
+            {/* Pre-publish checklist */}
+            <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+              <h4 className="text-sm font-medium flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                发布前检查
+              </h4>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-500" /> 规则配置完整
+                </p>
+                <p className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-500" /> 单笔测试通过
+                </p>
+                <p className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-500" /> 批量测试通过
+                </p>
+              </div>
+            </div>
+
+            {/* Publish type selection */}
+            <div className="space-y-3">
+              <Label>发布方式</Label>
+              <RadioGroup value={publishType} onValueChange={(v) => setPublishType(v as PublishType)}>
+                <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
+                  <RadioGroupItem value="direct" id="direct" className="mt-1" />
+                  <div className="space-y-1">
+                    <Label htmlFor="direct" className="cursor-pointer flex items-center gap-2">
+                      <Rocket className="h-4 w-4 text-primary" />
+                      直接发布
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      审批通过后立即全量生效
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
+                  <RadioGroupItem value="grayscale" id="grayscale" className="mt-1" />
+                  <div className="space-y-1">
+                    <Label htmlFor="grayscale" className="cursor-pointer flex items-center gap-2">
+                      <Percent className="h-4 w-4 text-emerald-500" />
+                      灰度发布
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      审批通过后先按比例灰度，观察指标后再全量
+                    </p>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* Initial traffic ratio for grayscale */}
+            {publishType === 'grayscale' && (
+              <div className="space-y-3 p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                <div className="flex items-center justify-between">
+                  <Label>初始灰度流量</Label>
+                  <span className="text-lg font-semibold text-emerald-500">{initialTrafficRatio[0]}%</span>
+                </div>
+                <Slider
+                  value={initialTrafficRatio}
+                  onValueChange={setInitialTrafficRatio}
+                  max={100}
+                  step={5}
+                  className="w-full"
+                />
+                <div className="flex gap-2">
+                  {trafficPresets.map(preset => (
+                    <Button
+                      key={preset}
+                      variant={initialTrafficRatio[0] === preset ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setInitialTrafficRatio([preset])}
+                    >
+                      {preset}%
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Publish note */}
+            <div className="space-y-2">
+              <Label htmlFor="publishNote">变更说明（可选）</Label>
+              <Textarea
+                id="publishNote"
+                placeholder="描述本次发布的变更内容..."
+                value={publishNote}
+                onChange={(e) => setPublishNote(e.target.value)}
+                rows={2}
+              />
+            </div>
+
+            {/* Impact notice */}
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 text-amber-700 text-sm">
+              <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <p>发布后将进入审批流程，预计影响今日 {effectiveVersion ? '12,580' : '0'} 笔订单。</p>
+            </div>
+          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setModalType(null)}>
+            <Button variant="outline" onClick={() => { setModalType(null); resetForms(); }}>
               取消
             </Button>
-            <Button onClick={handlePublish}>确认发布</Button>
+            <Button onClick={handlePublish}>
+              {publishType === 'grayscale' ? '提交灰度发布' : '提交发布'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* 回滚确认弹窗 */}
-      <Dialog open={modalType === 'rollback'} onOpenChange={() => setModalType(null)}>
+      {/* 回滚确认弹窗 - Enhanced */}
+      <Dialog open={modalType === 'rollback'} onOpenChange={() => { setModalType(null); resetForms(); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>回滚版本</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              回滚版本
+            </DialogTitle>
             <DialogDescription>
-              确定要回滚到版本 {selectedVersion?.versionNumber} 吗？当前生效版本将被替换。
+              确定要回滚到版本 {selectedVersion?.versionNumber} 吗？
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Version comparison */}
+            <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-muted/50">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">当前生效</p>
+                <p className="font-mono font-medium">{effectiveVersion?.versionNumber || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">回滚目标</p>
+                <p className="font-mono font-medium text-primary">{selectedVersion?.versionNumber}</p>
+              </div>
+            </div>
+
+            {/* Risk warning */}
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+              <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <p>回滚操作将立即替换当前生效版本，请确认已评估影响。</p>
+            </div>
+
+            {/* Rollback reason */}
+            <div className="space-y-2">
+              <Label htmlFor="rollbackReason">回滚原因（可选）</Label>
+              <Textarea
+                id="rollbackReason"
+                placeholder="请说明回滚原因..."
+                value={rollbackReason}
+                onChange={(e) => setRollbackReason(e.target.value)}
+                rows={2}
+              />
+            </div>
+
+            {/* Keep grayscale option */}
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="keepGrayscale" 
+                checked={keepGrayscale}
+                onCheckedChange={(checked) => setKeepGrayscale(!!checked)}
+              />
+              <Label htmlFor="keepGrayscale" className="text-sm font-normal cursor-pointer">
+                回滚后保留灰度版本
+              </Label>
+            </div>
+          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setModalType(null)}>
+            <Button variant="outline" onClick={() => { setModalType(null); resetForms(); }}>
               取消
             </Button>
             <Button variant="destructive" onClick={handleRollback}>
@@ -277,8 +549,8 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
         </DialogContent>
       </Dialog>
 
-      {/* 调整流量弹窗 */}
-      <Dialog open={modalType === 'adjustTraffic'} onOpenChange={() => setModalType(null)}>
+      {/* 调整流量弹窗 - Enhanced */}
+      <Dialog open={modalType === 'adjustTraffic'} onOpenChange={() => { setModalType(null); resetForms(); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>调整灰度流量</DialogTitle>
@@ -286,26 +558,56 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
               调整版本 {selectedVersion?.versionNumber} 的灰度流量比例。
             </DialogDescription>
           </DialogHeader>
-          <div className="py-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">灰度流量比例</span>
-              <span className="text-lg font-semibold text-primary">{trafficRatio[0]}%</span>
+          <div className="py-6 space-y-6">
+            {/* Current vs New traffic */}
+            <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-muted/50">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">当前流量</p>
+                <p className="text-xl font-bold">{selectedVersion?.grayscaleInfo?.trafficRatio || 0}%</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">调整后流量</p>
+                <p className="text-xl font-bold text-primary">{trafficRatio[0]}%</p>
+              </div>
             </div>
-            <Slider
-              value={trafficRatio}
-              onValueChange={setTrafficRatio}
-              max={100}
-              step={10}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>0%</span>
-              <span>50%</span>
-              <span>100%</span>
+
+            {/* Slider */}
+            <div className="space-y-3">
+              <Slider
+                value={trafficRatio}
+                onValueChange={setTrafficRatio}
+                max={100}
+                step={5}
+                className="w-full"
+              />
+              <div className="flex gap-2 justify-center">
+                {trafficPresets.map(preset => (
+                  <Button
+                    key={preset}
+                    variant={trafficRatio[0] === preset ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setTrafficRatio([preset])}
+                  >
+                    {preset}%
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Adjust reason */}
+            <div className="space-y-2">
+              <Label htmlFor="adjustReason">调整原因（可选）</Label>
+              <Textarea
+                id="adjustReason"
+                placeholder="请说明调整原因..."
+                value={adjustReason}
+                onChange={(e) => setAdjustReason(e.target.value)}
+                rows={2}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setModalType(null)}>
+            <Button variant="outline" onClick={() => { setModalType(null); resetForms(); }}>
               取消
             </Button>
             <Button onClick={handleAdjustTraffic}>确认调整</Button>
@@ -322,6 +624,25 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
               确定要将版本 {selectedVersion?.versionNumber} 全量发布吗？灰度版本将正式上线，替换当前生效版本。
             </DialogDescription>
           </DialogHeader>
+          {selectedVersion?.grayscaleInfo && (
+            <div className="p-4 rounded-lg bg-emerald-500/10 space-y-2">
+              <h4 className="text-sm font-medium text-emerald-700">灰度运行指标</h4>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">调用量</span>
+                  <p className="font-medium">{selectedVersion.grayscaleInfo.metrics.callCount.toLocaleString()}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">通过率</span>
+                  <p className="font-medium text-emerald-600">{selectedVersion.grayscaleInfo.metrics.passRate}%</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">异常率</span>
+                  <p className="font-medium text-amber-600">{selectedVersion.grayscaleInfo.metrics.errorRate}%</p>
+                </div>
+              </div>
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalType(null)}>
               取消
@@ -332,20 +653,72 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
       </Dialog>
 
       {/* 灰度回滚弹窗 */}
-      <Dialog open={modalType === 'rollbackGrayscale'} onOpenChange={() => setModalType(null)}>
+      <Dialog open={modalType === 'rollbackGrayscale'} onOpenChange={() => { setModalType(null); resetForms(); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>回滚灰度版本</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              回滚灰度版本
+            </DialogTitle>
             <DialogDescription>
               确定要回滚灰度版本 {selectedVersion?.versionNumber} 吗？回滚后将恢复到当前生效版本。
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 text-amber-700 text-sm">
+              <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <p>回滚后，当前灰度流量将全部切换到生效版本。</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="grayscaleRollbackReason">回滚原因（可选）</Label>
+              <Textarea
+                id="grayscaleRollbackReason"
+                placeholder="请说明回滚原因..."
+                value={rollbackReason}
+                onChange={(e) => setRollbackReason(e.target.value)}
+                rows={2}
+              />
+            </div>
+          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setModalType(null)}>
+            <Button variant="outline" onClick={() => { setModalType(null); resetForms(); }}>
               取消
             </Button>
             <Button variant="destructive" onClick={handleRollbackGrayscale}>
               确认回滚
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 删除确认弹窗 */}
+      <Dialog open={modalType === 'delete'} onOpenChange={() => setModalType(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              删除草稿版本
+            </DialogTitle>
+            <DialogDescription>
+              确定要删除以下 {selectedVersions.length} 个草稿版本吗？此操作不可撤销。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="max-h-[200px] overflow-y-auto space-y-2">
+              {selectedVersions.map(v => (
+                <div key={v.id} className="flex items-center gap-2 p-2 rounded bg-muted/50">
+                  <span className="font-mono text-sm">{v.versionNumber}</span>
+                  <span className="text-sm text-muted-foreground truncate">{v.description}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalType(null)}>
+              取消
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteVersions}>
+              确认删除
             </Button>
           </DialogFooter>
         </DialogContent>

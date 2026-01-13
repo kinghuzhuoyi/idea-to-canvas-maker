@@ -2,6 +2,7 @@ import { StrategyVersion, UserRole } from '@/types/project';
 import { EffectiveVersionCard } from './EffectiveVersionCard';
 import { ApprovingVersionCard } from './ApprovingVersionCard';
 import { GrayscaleVersionCard } from './GrayscaleVersionCard';
+import { toast } from 'sonner';
 
 interface VersionStatusCardsProps {
   versions: StrategyVersion[];
@@ -28,10 +29,22 @@ export function VersionStatusCards({
   const approvingVersion = versions.find(v => v.status === 'approving');
   const grayscaleVersion = versions.find(v => v.status === 'grayscale');
 
+  const handleViewEffectiveDetail = () => {
+    toast.info(`查看版本 ${effectiveVersion?.versionNumber} 详情`);
+  };
+
+  // If no status cards to show, return null
+  if (!effectiveVersion && !approvingVersion && !grayscaleVersion) {
+    return null;
+  }
+
   return (
     <div className="space-y-4">
       {effectiveVersion && (
-        <EffectiveVersionCard version={effectiveVersion} />
+        <EffectiveVersionCard 
+          version={effectiveVersion}
+          onViewDetail={handleViewEffectiveDetail}
+        />
       )}
       
       {approvingVersion && (

@@ -74,6 +74,18 @@ export interface StrategyDetailMetrics {
 // 版本状态
 export type VersionStatus = 'effective' | 'grayscale' | 'approving' | 'draft' | 'invalid';
 
+// 灰度阶段
+export type GrayscaleStage = 'observing' | 'scaling' | 'stable';
+
+// 审批节点
+export interface ApprovalNode {
+  id: string;
+  name: string;
+  status: 'pending' | 'approved' | 'current' | 'rejected';
+  approver?: string;
+  approvedAt?: string;
+}
+
 // 审批信息
 export interface ApprovalInfo {
   approvalId: string;           // OA审批进度ID
@@ -84,6 +96,26 @@ export interface ApprovalInfo {
   approverId: string;           // 审批人ID
   initiatedAt: string;          // 发起时间
   currentNode: string;          // 所在节点
+  nodes?: ApprovalNode[];       // 审批节点列表
+  isOverdue?: boolean;          // 是否超时
+  estimatedCompleteTime?: string; // 预计完成时间
+  remindCount?: number;         // 催办次数
+}
+
+// 自动扩量规则
+export interface AutoScaleRule {
+  id: string;
+  type: 'time' | 'metric';
+  trigger: string;              // 触发条件描述
+  targetRatio: number;          // 目标流量比例
+  enabled: boolean;
+}
+
+// 灰度成功标准
+export interface GrayscaleSuccessCriteria {
+  minPassRate: number;          // 最低通过率
+  maxErrorRate: number;         // 最高异常率
+  minDuration: string;          // 最短运行时长
 }
 
 // 灰度信息
@@ -92,10 +124,19 @@ export interface GrayscaleInfo {
   duration: string;             // 灰度运行时长
   trafficRatio: number;         // 灰度流量比例 %
   operator: string;             // 操作人
+  stage?: GrayscaleStage;       // 灰度阶段
+  autoScaleRules?: AutoScaleRule[];  // 自动扩量规则
+  successCriteria?: GrayscaleSuccessCriteria; // 成功标准
+  isPaused?: boolean;           // 是否暂停
   metrics: {
     callCount: number;          // 灰度调用量
     passRate: number;           // 灰度通过率
     errorRate: number;          // 灰度异常率
+  };
+  compareMetrics?: {            // 与生效版本对比
+    callCount: number;
+    passRate: number;
+    errorRate: number;
   };
 }
 
@@ -107,10 +148,14 @@ export interface StrategyVersion {
   status: VersionStatus;
   updatedAt: string;
   updatedBy: string;
+  createdAt?: string;           // 创建时间
+  createdBy?: string;           // 创建人
   publishedAt?: string;
   onlineTime?: string;          // 在线时长（生效版本）
   approvalInfo?: ApprovalInfo;  // 审批信息（审批中状态）
   grayscaleInfo?: GrayscaleInfo; // 灰度信息（灰度中状态）
+  tags?: string[];              // 版本标签
+  healthStatus?: 'healthy' | 'warning' | 'error'; // 健康状态
 }
 
 // 版本发布记录
@@ -136,4 +181,17 @@ export interface MetricTrendPoint {
   time: string;
   value: number;
   compareValue?: number;
+}
+
+// 版本对比结果
+export interface VersionCompareResult {
+  version1: string;
+  version2: string;
+  differences: {
+    field: string;
+    label: string;
+    value1: string;
+    value2: string;
+    type: 'added' | 'removed' | 'modified';
+  }[];
 }
