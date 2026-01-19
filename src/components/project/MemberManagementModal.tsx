@@ -28,6 +28,7 @@ import {
   Calendar,
   Clock,
   CheckCircle2,
+  Check,
 } from 'lucide-react';
 import { AddMemberForm } from './AddMemberForm';
 import { toast } from 'sonner';
@@ -88,6 +89,31 @@ export function MemberManagementModal({
       description: `角色：${roleLabels[role]}`,
       icon: <CheckCircle2 className="h-4 w-4 text-success" />,
     });
+  };
+
+  const handleChangeRole = (memberId: string, newRole: UserRole) => {
+    setLocalMembers(prev => 
+      prev.map(member => 
+        member.id === memberId ? { ...member, role: newRole } : member
+      )
+    );
+    const member = localMembers.find(m => m.id === memberId);
+    if (member) {
+      toast.success(`已更新 ${member.name} 的权限`, {
+        description: `新角色：${roleLabels[newRole]}`,
+        icon: <CheckCircle2 className="h-4 w-4 text-success" />,
+      });
+    }
+  };
+
+  const handleRemoveMember = (memberId: string) => {
+    const member = localMembers.find(m => m.id === memberId);
+    setLocalMembers(prev => prev.filter(m => m.id !== memberId));
+    if (member) {
+      toast.success(`已移除成员 ${member.name}`, {
+        icon: <Trash2 className="h-4 w-4 text-destructive" />,
+      });
+    }
   };
 
   return (
@@ -181,17 +207,32 @@ export function MemberManagementModal({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleChangeRole(member.id, 'admin')}
+                            disabled={member.role === 'admin'}
+                            className={member.role === 'admin' ? 'bg-primary/10' : ''}
+                          >
                             <Shield className="h-4 w-4 mr-2 text-primary" />
                             设为管理者
+                            {member.role === 'admin' && <Check className="h-3 w-3 ml-auto text-primary" />}
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleChangeRole(member.id, 'editor')}
+                            disabled={member.role === 'editor'}
+                            className={member.role === 'editor' ? 'bg-success/10' : ''}
+                          >
                             <Pencil className="h-4 w-4 mr-2 text-success" />
                             设为编辑者
+                            {member.role === 'editor' && <Check className="h-3 w-3 ml-auto text-success" />}
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleChangeRole(member.id, 'viewer')}
+                            disabled={member.role === 'viewer'}
+                            className={member.role === 'viewer' ? 'bg-muted' : ''}
+                          >
                             <Eye className="h-4 w-4 mr-2 text-muted-foreground" />
                             设为查看者
+                            {member.role === 'viewer' && <Check className="h-3 w-3 ml-auto" />}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -200,6 +241,7 @@ export function MemberManagementModal({
                         variant="ghost"
                         size="icon-sm"
                         className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleRemoveMember(member.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

@@ -12,19 +12,23 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FolderPlus, Search, Users, FileCode, Check, Loader2, X, FolderOpen } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { FolderPlus, Search, Users, FileCode, Check, Loader2, X, FolderOpen, Pencil, Eye } from 'lucide-react';
 import { mockSearchableProjects } from '@/data/mockData';
-import { Project } from '@/types/project';
+import { Project, UserRole } from '@/types/project';
+
+type RequestRole = 'editor' | 'viewer';
 
 interface JoinProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (projectCode: string, reason: string) => void;
+  onSubmit: (projectCode: string, reason: string, requestedRole: RequestRole) => void;
 }
 
 export function JoinProjectModal({ open, onOpenChange, onSubmit }: JoinProjectModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [reason, setReason] = useState('');
+  const [requestedRole, setRequestedRole] = useState<RequestRole>('editor');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchResults, setSearchResults] = useState<Project[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -77,10 +81,11 @@ export function JoinProjectModal({ open, onOpenChange, onSubmit }: JoinProjectMo
     
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
-    onSubmit(selectedProject.id, reason);
+    onSubmit(selectedProject.id, reason, requestedRole);
     setIsSubmitting(false);
     setSearchQuery('');
     setReason('');
+    setRequestedRole('editor');
     setSelectedProject(null);
     onOpenChange(false);
   };
@@ -88,6 +93,7 @@ export function JoinProjectModal({ open, onOpenChange, onSubmit }: JoinProjectMo
   const handleClose = () => {
     setSearchQuery('');
     setReason('');
+    setRequestedRole('editor');
     setSelectedProject(null);
     setSearchResults([]);
     onOpenChange(false);
@@ -212,6 +218,58 @@ export function JoinProjectModal({ open, onOpenChange, onSubmit }: JoinProjectMo
                 </div>
               </div>
             )}
+          </div>
+
+          {/* 申请权限选择 */}
+          <div className="space-y-3">
+            <Label>申请权限</Label>
+            <RadioGroup 
+              value={requestedRole} 
+              onValueChange={(value) => setRequestedRole(value as RequestRole)}
+              className="grid grid-cols-2 gap-3"
+            >
+              <Label
+                htmlFor="role-editor"
+                className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  requestedRole === 'editor' 
+                    ? 'border-success bg-success/5' 
+                    : 'border-border hover:border-success/50'
+                }`}
+              >
+                <RadioGroupItem value="editor" id="role-editor" className="sr-only" />
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  requestedRole === 'editor' ? 'bg-success/20' : 'bg-muted'
+                }`}>
+                  <Pencil className={`h-5 w-5 ${requestedRole === 'editor' ? 'text-success' : 'text-muted-foreground'}`} />
+                </div>
+                <div className="flex-1">
+                  <div className={`font-medium ${requestedRole === 'editor' ? 'text-success' : ''}`}>编辑者</div>
+                  <div className="text-xs text-muted-foreground">可编辑策略配置</div>
+                </div>
+                {requestedRole === 'editor' && <Check className="h-4 w-4 text-success" />}
+              </Label>
+              
+              <Label
+                htmlFor="role-viewer"
+                className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  requestedRole === 'viewer' 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                <RadioGroupItem value="viewer" id="role-viewer" className="sr-only" />
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  requestedRole === 'viewer' ? 'bg-primary/20' : 'bg-muted'
+                }`}>
+                  <Eye className={`h-5 w-5 ${requestedRole === 'viewer' ? 'text-primary' : 'text-muted-foreground'}`} />
+                </div>
+                <div className="flex-1">
+                  <div className={`font-medium ${requestedRole === 'viewer' ? 'text-primary' : ''}`}>查看者</div>
+                  <div className="text-xs text-muted-foreground">仅可查看策略</div>
+                </div>
+                {requestedRole === 'viewer' && <Check className="h-4 w-4 text-primary" />}
+              </Label>
+            </RadioGroup>
           </div>
 
           <div className="space-y-2">
