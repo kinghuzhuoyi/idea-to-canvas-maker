@@ -8,8 +8,11 @@ import { MemberManagementModal } from '@/components/project/MemberManagementModa
 import { JoinProjectModal } from '@/components/project/JoinProjectModal';
 import { LeaveProjectDialog } from '@/components/project/LeaveProjectDialog';
 import { UpgradeRoleModal } from '@/components/project/UpgradeRoleModal';
+import { WithdrawConfirmDialog } from '@/components/project/WithdrawConfirmDialog';
 import { mockProjects, mockStrategies, mockMembers } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
+
+type WithdrawType = 'application' | 'upgrade';
 
 const Index = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
@@ -18,6 +21,8 @@ const Index = () => {
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [projectToLeave, setProjectToLeave] = useState<string | null>(null);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
+  const [withdrawType, setWithdrawType] = useState<WithdrawType | null>(null);
   
   const { toast } = useToast();
 
@@ -51,25 +56,37 @@ const Index = () => {
     setProjectToLeave(null);
   };
 
-  const handleWithdrawApplication = (projectId: string) => {
-    toast({
-      title: '申请已撤回',
-      description: '您的项目加入申请已成功撤回。',
-    });
-    setSelectedProjectId(null);
+  const handleWithdrawApplication = () => {
+    setWithdrawType('application');
+    setWithdrawDialogOpen(true);
+  };
+
+  const handleWithdrawUpgrade = () => {
+    setWithdrawType('upgrade');
+    setWithdrawDialogOpen(true);
+  };
+
+  const confirmWithdraw = () => {
+    if (withdrawType === 'application') {
+      toast({
+        title: '申请已撤回',
+        description: '您的项目加入申请已成功撤回。',
+      });
+      setSelectedProjectId(null);
+    } else if (withdrawType === 'upgrade') {
+      toast({
+        title: '申请已撤回',
+        description: '您的权限升级申请已成功撤回。',
+      });
+    }
+    setWithdrawDialogOpen(false);
+    setWithdrawType(null);
   };
 
   const handleUpgradeRole = (reason: string) => {
     toast({
       title: '升级申请已提交',
       description: '您的权限升级申请已发送，请等待管理员审批。',
-    });
-  };
-
-  const handleWithdrawUpgrade = () => {
-    toast({
-      title: '申请已撤回',
-      description: '您的权限升级申请已成功撤回。',
     });
   };
 
@@ -95,7 +112,7 @@ const Index = () => {
             selectedProject.userRole === 'pending' ? (
               <PendingProjectDetail
                 project={selectedProject}
-                onWithdraw={() => handleWithdrawApplication(selectedProject.id)}
+                onWithdraw={handleWithdrawApplication}
               />
             ) : (
               <ProjectDetail
@@ -153,6 +170,15 @@ const Index = () => {
           onSubmit={handleUpgradeRole}
         />
       )}
+
+      {/* 撤回申请确认弹窗 */}
+      <WithdrawConfirmDialog
+        open={withdrawDialogOpen}
+        onOpenChange={setWithdrawDialogOpen}
+        type={withdrawType}
+        projectName={selectedProject?.name || ''}
+        onConfirm={confirmWithdraw}
+      />
     </div>
   );
 };
