@@ -1,4 +1,4 @@
-import { Project, Strategy, UserRole } from '@/types/project';
+import { Project, Strategy, UserRole, Member } from '@/types/project';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StrategyList } from './StrategyList';
@@ -18,6 +18,7 @@ import {
 interface ProjectDetailProps {
   project: Project;
   strategies: Strategy[];
+  admins: Member[];
   onMemberClick: () => void;
   onCreateStrategy?: () => void;
   onUpgradeRole?: () => void;
@@ -34,6 +35,7 @@ const roleLabels: Record<UserRole, string> = {
 export function ProjectDetail({
   project,
   strategies,
+  admins,
   onMemberClick,
   onCreateStrategy,
   onUpgradeRole,
@@ -102,6 +104,8 @@ export function ProjectDetail({
               appliedAt={project.upgradeApplication.appliedAt}
               reason={project.upgradeApplication.reason}
               status={project.upgradeApplication.status}
+              admins={admins}
+              projectName={project.name}
               onWithdraw={onWithdrawUpgrade}
             />
           </div>

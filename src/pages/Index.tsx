@@ -143,12 +143,14 @@ const Index = () => {
             selectedProject.userRole === 'pending' ? (
               <PendingProjectDetail
                 project={selectedProject}
+                admins={members.filter(m => m.role === 'admin')}
                 onWithdraw={handleWithdrawApplication}
               />
             ) : (
               <ProjectDetail
                 project={selectedProject}
                 strategies={strategies}
+                admins={members.filter(m => m.role === 'admin')}
                 onMemberClick={() => setMemberModalOpen(true)}
                 onCreateStrategy={() => setCreateStrategyOpen(true)}
                 onUpgradeRole={() => setUpgradeModalOpen(true)}

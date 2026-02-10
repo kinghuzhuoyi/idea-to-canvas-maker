@@ -1,12 +1,22 @@
+import { Member } from '@/types/project';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowUpCircle, Clock, CheckCircle, XCircle, Undo2 } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { ArrowUpCircle, Clock, CheckCircle, XCircle, Undo2, Mail, Shield } from 'lucide-react';
 
 interface UpgradeProgressCardProps {
   targetRole: 'editor' | 'admin';
   appliedAt: string;
   reason?: string;
   status: 'pending' | 'approved' | 'rejected';
+  admins: Member[];
+  projectName: string;
   onWithdraw: () => void;
 }
 
@@ -26,6 +36,8 @@ export function UpgradeProgressCard({
   appliedAt,
   reason,
   status,
+  admins,
+  projectName,
   onWithdraw,
 }: UpgradeProgressCardProps) {
   const currentStep = status === 'pending' ? 2 : status === 'approved' ? 3 : 0;
@@ -118,6 +130,49 @@ export function UpgradeProgressCard({
           <p>申请时间：{appliedAt}</p>
           {reason && <p>申请理由：{reason}</p>}
         </div>
+
+        {/* 管理员信息 */}
+        {status === 'pending' && admins.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground">审核管理员</span>
+            </div>
+            <div className="space-y-2">
+              {admins.map((admin) => (
+                <div key={admin.id} className="flex items-center justify-between p-2 rounded-md bg-background/50">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                        {admin.name.slice(-2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-xs font-medium">{admin.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{admin.email}</p>
+                    </div>
+                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 gap-1 text-xs text-primary hover:text-primary"
+                          onClick={() => window.open(`mailto:${admin.email}?subject=关于「${projectName}」项目权限升级申请`, '_blank')}
+                        >
+                          <Mail className="h-3.5 w-3.5" />
+                          联系
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>发送邮件给 {admin.name}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

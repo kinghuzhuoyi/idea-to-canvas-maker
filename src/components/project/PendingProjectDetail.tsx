@@ -1,6 +1,13 @@
-import { Project } from '@/types/project';
+import { Project, Member } from '@/types/project';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   Calendar,
   Clock,
@@ -11,10 +18,13 @@ import {
   XCircle,
   Undo2,
   Loader2,
+  Mail,
+  Shield,
 } from 'lucide-react';
 
 interface PendingProjectDetailProps {
   project: Project;
+  admins: Member[];
   onWithdraw: () => void;
 }
 
@@ -24,7 +34,7 @@ const applicationSteps = [
   { id: 3, name: '加入成功', description: '审核通过后即可访问项目内容' },
 ];
 
-export function PendingProjectDetail({ project, onWithdraw }: PendingProjectDetailProps) {
+export function PendingProjectDetail({ project, admins, onWithdraw }: PendingProjectDetailProps) {
   const currentStep = 2; // 当前在管理员审核阶段
 
   return (
@@ -153,8 +163,52 @@ export function PendingProjectDetail({ project, onWithdraw }: PendingProjectDeta
             </div>
           </div>
 
+          {/* 管理员信息卡片 */}
+          {admins.length > 0 && (
+            <div className="card-elevated p-6 mt-6 animate-fade-in" style={{ animationDelay: '150ms' }}>
+              <div className="flex items-center gap-2 mb-4">
+                <Shield className="h-4 w-4 text-muted-foreground" />
+                <h4 className="font-medium">项目管理员</h4>
+                <span className="text-xs text-muted-foreground">（审核长时间未通过？可直接联系管理员）</span>
+              </div>
+              <div className="space-y-3">
+                {admins.map((admin) => (
+                  <div key={admin.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                          {admin.name.slice(-2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">{admin.name}</p>
+                        <p className="text-xs text-muted-foreground">{admin.email}</p>
+                      </div>
+                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1.5 text-primary hover:text-primary"
+                            onClick={() => window.open(`mailto:${admin.email}?subject=关于加入「${project.name}」项目的申请`, '_blank')}
+                          >
+                            <Mail className="h-4 w-4" />
+                            联系
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>发送邮件给 {admin.name}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 撤回按钮 */}
-          <div className="mt-6 flex justify-center animate-fade-in" style={{ animationDelay: '200ms' }}>
+          <div className="mt-6 flex justify-center animate-fade-in" style={{ animationDelay: '250ms' }}>
             <Button
               variant="outline"
               onClick={onWithdraw}
