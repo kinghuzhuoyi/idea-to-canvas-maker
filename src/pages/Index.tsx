@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { ProjectSidebar } from '@/components/project/ProjectSidebar';
 import { ProjectDetail } from '@/components/project/ProjectDetail';
@@ -9,7 +10,9 @@ import { JoinProjectModal } from '@/components/project/JoinProjectModal';
 import { LeaveProjectDialog } from '@/components/project/LeaveProjectDialog';
 import { UpgradeRoleModal } from '@/components/project/UpgradeRoleModal';
 import { WithdrawConfirmDialog } from '@/components/project/WithdrawConfirmDialog';
+import { CreateStrategyModal } from '@/components/project/CreateStrategyModal';
 import { mockProjects, mockStrategies, mockMembers } from '@/data/mockData';
+import { Strategy } from '@/types/project';
 import { useToast } from '@/hooks/use-toast';
 
 type WithdrawType = 'application' | 'upgrade';
@@ -23,11 +26,14 @@ const Index = () => {
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const [withdrawType, setWithdrawType] = useState<WithdrawType | null>(null);
+  const [createStrategyOpen, setCreateStrategyOpen] = useState(false);
+  const [localStrategies, setLocalStrategies] = useState<Record<string, Strategy[]>>(mockStrategies);
   
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const selectedProject = mockProjects.find(p => p.id === selectedProjectId);
-  const strategies = selectedProjectId ? mockStrategies[selectedProjectId] || [] : [];
+  const strategies = selectedProjectId ? localStrategies[selectedProjectId] || [] : [];
   const members = selectedProjectId ? mockMembers[selectedProjectId] || [] : [];
 
   const handleJoinProject = (code: string, reason: string) => {
@@ -90,6 +96,31 @@ const Index = () => {
     });
   };
 
+  const handleCreateStrategy = (data: { code: string; name: string; description: string }) => {
+    if (!selectedProjectId) return;
+    const newStrategy: Strategy = {
+      id: `s-new-${Date.now()}`,
+      code: data.code,
+      name: data.name,
+      description: data.description,
+      updatedAt: new Date().toISOString().split('T')[0],
+      referenced: false,
+      projectId: selectedProjectId,
+      publishStatus: 'none',
+      metrics: { todayCalls: 0, errorRate: 0 },
+    };
+    setLocalStrategies(prev => ({
+      ...prev,
+      [selectedProjectId]: [...(prev[selectedProjectId] || []), newStrategy],
+    }));
+    setCreateStrategyOpen(false);
+    toast({
+      title: '策略创建成功',
+      description: `策略「${data.name}」已创建，正在跳转到详情页...`,
+    });
+    navigate(`/project/${selectedProjectId}/strategy/${newStrategy.id}`);
+  };
+
   const projectToLeaveName = projectToLeave 
     ? mockProjects.find(p => p.id === projectToLeave)?.name || ''
     : '';
@@ -119,12 +150,7 @@ const Index = () => {
                 project={selectedProject}
                 strategies={strategies}
                 onMemberClick={() => setMemberModalOpen(true)}
-                onCreateStrategy={() => {
-                  toast({
-                    title: '功能开发中',
-                    description: '新建策略功能即将上线。',
-                  });
-                }}
+                onCreateStrategy={() => setCreateStrategyOpen(true)}
                 onUpgradeRole={() => setUpgradeModalOpen(true)}
                 onWithdrawUpgrade={handleWithdrawUpgrade}
               />
@@ -178,6 +204,13 @@ const Index = () => {
         type={withdrawType}
         projectName={selectedProject?.name || ''}
         onConfirm={confirmWithdraw}
+      />
+
+      {/* 新建策略弹窗 */}
+      <CreateStrategyModal
+        open={createStrategyOpen}
+        onOpenChange={setCreateStrategyOpen}
+        onSubmit={handleCreateStrategy}
       />
     </div>
   );
