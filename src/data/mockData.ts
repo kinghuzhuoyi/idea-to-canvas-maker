@@ -327,6 +327,13 @@ export const mockMembers: Record<string, Member[]> = {
     { id: 'm25', name: '韩三', email: 'hansan@company.com', role: 'editor', joinedAt: '2024-10-01' },
     { id: 'm26', name: '唐四', email: 'tangsi@company.com', role: 'viewer', joinedAt: '2024-10-15' },
   ],
+  '6': [
+    { id: 'm32', name: '方一', email: 'fangyi@company.com', role: 'admin', joinedAt: '2024-10-15' },
+    { id: 'm33', name: '邹二', email: 'zouer@company.com', role: 'admin', joinedAt: '2024-10-20' },
+  ],
+  '7': [
+    { id: 'm34', name: '熊一', email: 'xiongyi@company.com', role: 'admin', joinedAt: '2024-11-01' },
+  ],
   '8': [
     { id: 'm27', name: '范一', email: 'fanyi@company.com', role: 'admin', joinedAt: '2024-07-20' },
     { id: 'm28', name: '彭二', email: 'penger@company.com', role: 'editor', joinedAt: '2024-08-01' },
