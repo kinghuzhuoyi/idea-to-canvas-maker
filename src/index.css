@@ -65,6 +65,15 @@
     --shadow-glow: 0 0 20px hsl(199 89% 48% / 0.15);
     --shadow-card: 0 1px 3px hsl(222 47% 11% / 0.04), 0 4px 12px hsl(222 47% 11% / 0.06);
     --shadow-card-hover: 0 4px 12px hsl(222 47% 11% / 0.08), 0 8px 24px hsl(222 47% 11% / 0.1);
+
+    /* Chart color palette */
+    --chart-1: 199 89% 48%;
+    --chart-2: 142 76% 42%;
+    --chart-3: 45 93% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 0 75% 60%;
+    --chart-6: 187 85% 43%;
+    --chart-7: 215 16% 55%;
   }
 
   .light {
