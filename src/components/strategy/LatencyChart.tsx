@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LatencyTrendPoint } from '@/data/mockMonitoringData';
+import { LatencyTrendPoint, generateLatencyTrend } from '@/data/mockMonitoringData';
+import { MonitoringGranularity } from '@/types/project';
 import { Timer } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -11,22 +13,31 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
+import { ChartGranularityToggle } from './ChartGranularityToggle';
 
 interface LatencyChartProps {
-  data: LatencyTrendPoint[];
   tp50: number;
   tp95: number;
   tp99: number;
+  initialData?: LatencyTrendPoint[];
 }
 
-export function LatencyChart({ data, tp50, tp95, tp99 }: LatencyChartProps) {
+export function LatencyChart({ tp50, tp95, tp99 }: LatencyChartProps) {
+  const [granularity, setGranularity] = useState<MonitoringGranularity>('hour');
+  const data = useMemo(() => generateLatencyTrend(granularity), [granularity]);
+  const isMinute = granularity === 'minute';
+  const chartMinWidth = isMinute ? Math.max(1200, data.length * 22) : undefined;
+
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Timer className="h-4 w-4 text-primary" />
-          订单耗时数据（TP50 / TP95 / TP99）
-        </CardTitle>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Timer className="h-4 w-4 text-primary" />
+            耗时数据（TP50 / TP95 / TP99）
+          </CardTitle>
+          <ChartGranularityToggle value={granularity} onChange={setGranularity} />
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-3 gap-3 mb-4">
@@ -52,39 +63,43 @@ export function LatencyChart({ data, tp50, tp95, tp99 }: LatencyChartProps) {
             </div>
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={data} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis
-              dataKey="time"
-              tick={{ fontSize: 11 }}
-              stroke="hsl(var(--muted-foreground))"
-              tickLine={false}
-              interval={data.length > 24 ? Math.ceil(data.length / 8) - 1 : 3}
-              minTickGap={8}
-            />
-            <YAxis
-              tick={{ fontSize: 11 }}
-              stroke="hsl(var(--muted-foreground))"
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(v) => `${v}ms`}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                fontSize: '12px',
-              }}
-              formatter={(value: number, name: string) => [`${value}ms`, name.toUpperCase()]}
-            />
-            <Legend wrapperStyle={{ fontSize: '12px' }} formatter={(v) => v.toUpperCase()} />
-            <Line type="monotone" dataKey="tp50" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="tp95" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="tp99" stroke="hsl(var(--chart-5))" strokeWidth={2} dot={false} />
-          </LineChart>
-        </ResponsiveContainer>
+        <div className="overflow-x-auto">
+          <div style={{ minWidth: chartMinWidth }}>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={data} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis
+                  dataKey="time"
+                  tick={{ fontSize: 11 }}
+                  stroke="hsl(var(--muted-foreground))"
+                  tickLine={false}
+                  interval={isMinute ? 2 : 'preserveStartEnd'}
+                  minTickGap={8}
+                />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  stroke="hsl(var(--muted-foreground))"
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => `${v}ms`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                  }}
+                  formatter={(value: number, name: string) => [`${value}ms`, name.toUpperCase()]}
+                />
+                <Legend wrapperStyle={{ fontSize: '12px' }} formatter={(v) => v.toUpperCase()} />
+                <Line type="monotone" dataKey="tp50" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="tp95" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="tp99" stroke="hsl(var(--chart-5))" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
