@@ -64,11 +64,56 @@ export interface StrategyDetailMetrics {
   passRate: number;           // 通过率 %
   errorRate: number;          // 异常率 %
   tp99: number;               // TP99耗时 ms
+  tp95?: number;              // TP95耗时 ms
+  tp50?: number;              // TP50耗时 ms
   todayCalls: number;         // 今日调用量
-  callsCompare: number;       // 环比增长 %
+  callsCompare: number;       // 环比增长 %（对比昨日同时间段）
   passCount: number;          // 通过数量
   sameTermPassRate: number;   // 同期通过率 %
+  passRateCompare?: number;   // 通过率环比（对比昨日全天）
+  errorRateCompare?: number;  // 异常率环比
   errorCount: number;         // 异常数量
+}
+
+// 拒绝原因分布
+export interface RejectReasonItem {
+  code: string;         // reject_code 标签
+  label: string;        // 中文描述
+  count: number;        // 命中数量
+  percentage: number;   // 占比 %
+}
+
+// 授信额度/定价分布
+export interface DistributionBucket {
+  range: string;        // 区间描述，例如 "1-3万"
+  count: number;        // 订单数
+  percentage: number;   // 占比 %
+}
+
+// 节点通过率
+export interface NodeVerdictItem {
+  nodeId: string;
+  nodeName: string;
+  total: number;        // 节点流入量
+  passCount: number;    // 通过数
+  passRate: number;     // 通过率 %
+}
+
+// 规则命中排行
+export interface RuleHitItem {
+  ruleId: string;
+  ruleCode: string;
+  ruleName: string;
+  hitCount: number;     // 命中数量
+  rank: number;         // 排名
+  trend: number;        // 环比 %
+}
+
+// 监控筛选条件
+export interface MonitoringFilter {
+  businessCode: string;       // 业务场景
+  dateRange: 'today' | '7d' | '30d' | 'custom';
+  customerTag: string;        // 客户标签 / AB分流种子
 }
 
 // 版本状态
