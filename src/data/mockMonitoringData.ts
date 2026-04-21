@@ -4,6 +4,7 @@ import {
   NodeVerdictItem,
   RuleHitItem,
   MetricTrendPoint,
+  MonitoringGranularity,
 } from '@/types/project';
 
 // 业务场景选项
@@ -93,18 +94,37 @@ export const mockRuleHits: RuleHitItem[] = [
   { ruleId: 'r20', ruleCode: 'RULE_BK_001', ruleName: '银行卡风险', hitCount: 240, rank: 20, trend: 2.9 },
 ];
 
-// 生成24小时分布趋势数据
-function generateHourlyTrend(baseValue: number, variance = 0.3): MetricTrendPoint[] {
+// 按粒度生成当日趋势数据（hour: 24个点, minute: 过去60分钟）
+export function generateTrendByGranularity(
+  baseValue: number,
+  granularity: MonitoringGranularity,
+  variance = 0.3,
+): MetricTrendPoint[] {
   const data: MetricTrendPoint[] = [];
-  for (let h = 0; h < 24; h++) {
-    const factor = 1 + (Math.random() - 0.5) * variance;
-    // 业务量早晚高峰
-    const hourFactor = h >= 9 && h <= 22 ? 1.2 : 0.6;
-    data.push({
-      time: `${h.toString().padStart(2, '0')}:00`,
-      value: Math.round(baseValue * factor * hourFactor),
-      compareValue: Math.round(baseValue * factor * hourFactor * 0.92),
-    });
+  if (granularity === 'hour') {
+    for (let h = 0; h < 24; h++) {
+      const factor = 1 + (Math.random() - 0.5) * variance;
+      const hourFactor = h >= 9 && h <= 22 ? 1.2 : 0.6;
+      data.push({
+        time: `${h.toString().padStart(2, '0')}:00`,
+        value: Math.round(baseValue * factor * hourFactor),
+        compareValue: Math.round(baseValue * factor * hourFactor * 0.92),
+      });
+    }
+  } else {
+    // 按分钟：最近 60 分钟
+    const now = new Date();
+    for (let i = 59; i >= 0; i--) {
+      const t = new Date(now.getTime() - i * 60 * 1000);
+      const factor = 1 + (Math.random() - 0.5) * variance;
+      // 分钟级别基数按 1/60 缩放
+      const per = baseValue / 60;
+      data.push({
+        time: `${t.getHours().toString().padStart(2, '0')}:${t.getMinutes().toString().padStart(2, '0')}`,
+        value: Math.max(0, Math.round(per * factor * 2)),
+        compareValue: Math.max(0, Math.round(per * factor * 2 * 0.92)),
+      });
+    }
   }
   return data;
 }
@@ -117,25 +137,33 @@ export interface LatencyTrendPoint {
   tp99: number;
 }
 
-export function generateLatencyTrend(): LatencyTrendPoint[] {
+export function generateLatencyTrend(granularity: MonitoringGranularity = 'hour'): LatencyTrendPoint[] {
   const data: LatencyTrendPoint[] = [];
-  for (let h = 0; h < 24; h++) {
-    const factor = 1 + (Math.random() - 0.5) * 0.2;
-    data.push({
-      time: `${h.toString().padStart(2, '0')}:00`,
-      tp50: Math.round(20 * factor),
-      tp95: Math.round(48 * factor),
-      tp99: Math.round(62 * factor),
-    });
+  if (granularity === 'hour') {
+    for (let h = 0; h < 24; h++) {
+      const factor = 1 + (Math.random() - 0.5) * 0.2;
+      data.push({
+        time: `${h.toString().padStart(2, '0')}:00`,
+        tp50: Math.round(20 * factor),
+        tp95: Math.round(48 * factor),
+        tp99: Math.round(62 * factor),
+      });
+    }
+  } else {
+    const now = new Date();
+    for (let i = 59; i >= 0; i--) {
+      const t = new Date(now.getTime() - i * 60 * 1000);
+      const factor = 1 + (Math.random() - 0.5) * 0.25;
+      data.push({
+        time: `${t.getHours().toString().padStart(2, '0')}:${t.getMinutes().toString().padStart(2, '0')}`,
+        tp50: Math.round(20 * factor),
+        tp95: Math.round(48 * factor),
+        tp99: Math.round(62 * factor),
+      });
+    }
   }
   return data;
 }
-
-export const mockHourlyCalls = generateHourlyTrend(500);
-export const mockHourlyErrorRate = generateHourlyTrend(0.25, 0.5).map(p => ({
-  ...p,
-  value: Number((p.value / 100).toFixed(2)),
-}));
 
 // 饼图颜色池（使用 HSL 语义色）
 export const CHART_COLORS = [
