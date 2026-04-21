@@ -66,14 +66,14 @@
     --shadow-card: 0 1px 3px hsl(222 47% 11% / 0.04), 0 4px 12px hsl(222 47% 11% / 0.06);
     --shadow-card-hover: 0 4px 12px hsl(222 47% 11% / 0.08), 0 8px 24px hsl(222 47% 11% / 0.1);
 
-    /* Chart color palette */
-    --chart-1: 199 89% 48%;
-    --chart-2: 142 76% 42%;
-    --chart-3: 45 93% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 0 75% 60%;
-    --chart-6: 187 85% 43%;
-    --chart-7: 215 16% 55%;
+    /* Chart color palette - muted, business-friendly */
+    --chart-1: 210 55% 58%;   /* 柔和蓝 */
+    --chart-2: 160 40% 52%;   /* 柔和青绿 */
+    --chart-3: 35 60% 62%;    /* 柔和琥珀 */
+    --chart-4: 250 35% 65%;   /* 柔和紫 */
+    --chart-5: 10 55% 65%;    /* 柔和砖红 */
+    --chart-6: 195 45% 55%;   /* 柔和青 */
+    --chart-7: 215 15% 60%;   /* 中性灰蓝 */
   }
 
   .light {
