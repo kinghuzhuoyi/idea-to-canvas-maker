@@ -8,11 +8,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Filter, Calendar as CalendarIcon } from 'lucide-react';
+import { Filter, Calendar as CalendarIcon, Clock } from 'lucide-react';
 
 interface MonitoringFiltersProps {
   filter: MonitoringFilter;
   onFilterChange: (filter: MonitoringFilter) => void;
+}
+
+function getTodayLabel() {
+  const d = new Date();
+  return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
 }
 
 export function MonitoringFilters({ filter, onFilterChange }: MonitoringFiltersProps) {
@@ -61,23 +66,27 @@ export function MonitoringFilters({ filter, onFilterChange }: MonitoringFiltersP
         </Select>
       </div>
 
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <CalendarIcon className="h-3.5 w-3.5" />
+        <span>当日数据</span>
+        <span className="font-mono text-foreground">{getTodayLabel()}</span>
+      </div>
+
       <div className="flex items-center gap-2 ml-auto">
-        <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
+        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-xs text-muted-foreground">聚合粒度</span>
         <ToggleGroup
           type="single"
           size="sm"
-          value={filter.dateRange}
-          onValueChange={(v) => v && onFilterChange({ ...filter, dateRange: v as MonitoringFilter['dateRange'] })}
+          value={filter.granularity}
+          onValueChange={(v) => v && onFilterChange({ ...filter, granularity: v as MonitoringFilter['granularity'] })}
           className="bg-muted/50 rounded-md p-0.5"
         >
-          <ToggleGroupItem value="today" className="h-7 px-3 text-xs data-[state=on]:bg-background data-[state=on]:shadow-sm">
-            今日
+          <ToggleGroupItem value="hour" className="h-7 px-3 text-xs data-[state=on]:bg-background data-[state=on]:shadow-sm">
+            按小时
           </ToggleGroupItem>
-          <ToggleGroupItem value="7d" className="h-7 px-3 text-xs data-[state=on]:bg-background data-[state=on]:shadow-sm">
-            近7日
-          </ToggleGroupItem>
-          <ToggleGroupItem value="30d" className="h-7 px-3 text-xs data-[state=on]:bg-background data-[state=on]:shadow-sm">
-            近30日
+          <ToggleGroupItem value="minute" className="h-7 px-3 text-xs data-[state=on]:bg-background data-[state=on]:shadow-sm">
+            按分钟
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
