@@ -109,11 +109,14 @@ export interface RuleHitItem {
   trend: number;        // 环比 %
 }
 
+// 监控数据聚合粒度
+export type MonitoringGranularity = 'hour' | 'minute';
+
 // 监控筛选条件
 export interface MonitoringFilter {
   businessCode: string;       // 业务场景
-  dateRange: 'today' | '7d' | '30d' | 'custom';
   customerTag: string;        // 客户标签 / AB分流种子
+  granularity: MonitoringGranularity; // 聚合粒度
 }
 
 // 版本状态

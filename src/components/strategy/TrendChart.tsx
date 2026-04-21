@@ -24,6 +24,7 @@ interface TrendChartProps {
   showArea?: boolean;
   height?: number;
   className?: string;
+  xAxisInterval?: number | 'preserveStartEnd';
 }
 
 export function TrendChart({
@@ -37,8 +38,11 @@ export function TrendChart({
   showArea = false,
   height = 200,
   className,
+  xAxisInterval,
 }: TrendChartProps) {
   const ChartComponent = showArea ? AreaChart : LineChart;
+  const computedInterval =
+    xAxisInterval ?? (data.length > 24 ? Math.ceil(data.length / 8) - 1 : 'preserveStartEnd');
 
   return (
     <div className={cn('rounded-lg border bg-card p-4', className)}>
@@ -51,6 +55,8 @@ export function TrendChart({
             tick={{ fontSize: 12 }} 
             stroke="hsl(var(--muted-foreground))"
             tickLine={false}
+            interval={computedInterval}
+            minTickGap={8}
           />
           <YAxis 
             tick={{ fontSize: 12 }} 

@@ -60,7 +60,8 @@ export function LatencyChart({ data, tp50, tp95, tp99 }: LatencyChartProps) {
               tick={{ fontSize: 11 }}
               stroke="hsl(var(--muted-foreground))"
               tickLine={false}
-              interval={3}
+              interval={data.length > 24 ? Math.ceil(data.length / 8) - 1 : 3}
+              minTickGap={8}
             />
             <YAxis
               tick={{ fontSize: 11 }}
