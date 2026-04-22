@@ -4,14 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Target, Search, TrendingUp, TrendingDown } from 'lucide-react';
+import { Target, Search, FileSearch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RuleHitTableProps {
   data: RuleHitItem[];
+  totalApplications?: number; // 用于计算命中率
+  onRowClick?: (rule: RuleHitItem) => void;
 }
 
-export function RuleHitTable({ data }: RuleHitTableProps) {
+export function RuleHitTable({ data, totalApplications, onRowClick }: RuleHitTableProps) {
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
@@ -23,8 +25,6 @@ export function RuleHitTable({ data }: RuleHitTableProps) {
         r.ruleCode.toLowerCase().includes(q)
     );
   }, [data, search]);
-
-  const maxHit = Math.max(...data.map((r) => r.hitCount), 1);
 
   return (
     <Card>
@@ -57,16 +57,21 @@ export function RuleHitTable({ data }: RuleHitTableProps) {
                 <TableHead>规则编码</TableHead>
                 <TableHead>规则名称</TableHead>
                 <TableHead className="text-right">命中数</TableHead>
-                <TableHead className="w-40">命中分布</TableHead>
-                <TableHead className="text-right w-20">环比</TableHead>
+                <TableHead className="text-right w-24">命中率</TableHead>
+                <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((rule) => {
-                const trendUp = rule.trend > 0;
-                const trendZero = rule.trend === 0;
+                const hitRate = totalApplications && totalApplications > 0
+                  ? (rule.hitCount / totalApplications) * 100
+                  : 0;
                 return (
-                  <TableRow key={rule.ruleId}>
+                  <TableRow
+                    key={rule.ruleId}
+                    className={cn(onRowClick && 'cursor-pointer')}
+                    onClick={() => onRowClick?.(rule)}
+                  >
                     <TableCell>
                       <Badge
                         variant={rule.rank <= 3 ? 'default' : 'outline'}
@@ -89,29 +94,13 @@ export function RuleHitTable({ data }: RuleHitTableProps) {
                     <TableCell className="text-right tabular-nums font-semibold">
                       {rule.hitCount.toLocaleString()}
                     </TableCell>
-                    <TableCell>
-                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary rounded-full"
-                          style={{ width: `${(rule.hitCount / maxHit) * 100}%` }}
-                        />
-                      </div>
+                    <TableCell className="text-right tabular-nums text-foreground">
+                      {hitRate.toFixed(2)}%
                     </TableCell>
                     <TableCell className="text-right">
-                      <span
-                        className={cn(
-                          'inline-flex items-center gap-0.5 text-xs font-medium tabular-nums',
-                          trendZero
-                            ? 'text-muted-foreground'
-                            : trendUp
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-emerald-600 dark:text-emerald-400'
-                        )}
-                      >
-                        {!trendZero && (trendUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />)}
-                        {trendUp ? '+' : ''}
-                        {rule.trend.toFixed(1)}%
-                      </span>
+                      {onRowClick && (
+                        <FileSearch className="h-3.5 w-3.5 text-muted-foreground inline" />
+                      )}
                     </TableCell>
                   </TableRow>
                 );
