@@ -8,15 +8,27 @@ interface DistributionChartProps {
   icon?: React.ReactNode;
   data: DistributionBucket[];
   valueLabel?: string;
+  onBucketClick?: (bucket: DistributionBucket) => void;
 }
 
-export function DistributionChart({ title, icon, data, valueLabel = '订单数' }: DistributionChartProps) {
+export function DistributionChart({
+  title,
+  icon,
+  data,
+  valueLabel = '订单数',
+  onBucketClick,
+}: DistributionChartProps) {
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           {icon}
           {title}
+          {onBucketClick && (
+            <span className="text-xs font-normal text-muted-foreground ml-auto">
+              点击柱形查看明细
+            </span>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -48,7 +60,12 @@ export function DistributionChart({ title, icon, data, valueLabel = '订单数' 
                 valueLabel,
               ]}
             />
-            <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+            <Bar
+              dataKey="count"
+              radius={[6, 6, 0, 0]}
+              onClick={(d: any) => onBucketClick?.(d as DistributionBucket)}
+              style={{ cursor: onBucketClick ? 'pointer' : undefined }}
+            >
               {data.map((_, i) => (
                 <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
               ))}

@@ -1,14 +1,14 @@
 import { NodeVerdictItem } from '@/types/project';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Workflow } from 'lucide-react';
+import { Workflow, FileSearch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NodeVerdictChartProps {
   data: NodeVerdictItem[];
+  onNodeClick?: (node: NodeVerdictItem) => void;
 }
 
-export function NodeVerdictChart({ data }: NodeVerdictChartProps) {
+export function NodeVerdictChart({ data, onNodeClick }: NodeVerdictChartProps) {
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -38,7 +38,14 @@ export function NodeVerdictChart({ data }: NodeVerdictChartProps) {
                 : 'bg-red-500';
 
             return (
-              <div key={node.nodeId} className="group">
+              <div
+                key={node.nodeId}
+                className={cn(
+                  'group rounded-md p-1.5 -m-1.5 transition-colors',
+                  onNodeClick && 'cursor-pointer hover:bg-muted/50',
+                )}
+                onClick={() => onNodeClick?.(node)}
+              >
                 <div className="flex items-center justify-between mb-1.5 text-sm">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="font-mono text-xs text-muted-foreground w-6">
@@ -47,6 +54,9 @@ export function NodeVerdictChart({ data }: NodeVerdictChartProps) {
                     <span className="font-medium text-foreground truncate">
                       {node.nodeName}
                     </span>
+                    {onNodeClick && (
+                      <FileSearch className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
                   </div>
                   <div className="flex items-center gap-3 text-xs shrink-0">
                     <span className="text-muted-foreground tabular-nums">

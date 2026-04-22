@@ -1,15 +1,17 @@
 import { RejectReasonItem } from '@/types/project';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { XCircle } from 'lucide-react';
+import { XCircle, FileSearch } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { CHART_COLORS } from '@/data/mockMonitoringData';
+import { cn } from '@/lib/utils';
 
 interface RejectReasonChartProps {
   data: RejectReasonItem[];
+  onItemClick?: (item: RejectReasonItem) => void;
 }
 
-export function RejectReasonChart({ data }: RejectReasonChartProps) {
+export function RejectReasonChart({ data, onItemClick }: RejectReasonChartProps) {
   const total = data.reduce((sum, item) => sum + item.count, 0);
 
   return (
@@ -37,6 +39,8 @@ export function RejectReasonChart({ data }: RejectReasonChartProps) {
                   innerRadius={50}
                   outerRadius={90}
                   paddingAngle={2}
+                  onClick={(d: any) => onItemClick?.(d?.payload as RejectReasonItem)}
+                  style={{ cursor: onItemClick ? 'pointer' : undefined }}
                 >
                   {data.map((_, i) => (
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
@@ -60,7 +64,14 @@ export function RejectReasonChart({ data }: RejectReasonChartProps) {
 
           <div className="space-y-1.5 text-sm">
             {data.map((item, i) => (
-              <div key={item.code} className="flex items-center gap-2">
+              <div
+                key={item.code}
+                className={cn(
+                  'group flex items-center gap-2 rounded-md px-1 py-0.5 -mx-1',
+                  onItemClick && 'cursor-pointer hover:bg-muted/60',
+                )}
+                onClick={() => onItemClick?.(item)}
+              >
                 <span
                   className="h-2.5 w-2.5 rounded-sm shrink-0"
                   style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
@@ -70,6 +81,9 @@ export function RejectReasonChart({ data }: RejectReasonChartProps) {
                 </Badge>
                 <span className="text-foreground truncate flex-1">{item.label}</span>
                 <span className="text-muted-foreground tabular-nums">{item.percentage}%</span>
+                {onItemClick && (
+                  <FileSearch className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                )}
               </div>
             ))}
           </div>
