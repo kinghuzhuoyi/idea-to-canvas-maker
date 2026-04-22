@@ -1,0 +1,447 @@
+import { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from '@/components/ui/radio-group';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  CustomMetric,
+  OutputField,
+  BinDefinition,
+  CustomMetricChartType,
+} from '@/types/project';
+import { mockOutputFields } from '@/data/mockMonitoringData';
+import { Plus, Trash2, Search, PieChart as PieIcon, BarChart3, Activity, Zap } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+
+interface CustomMetricBuilderProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (metric: CustomMetric) => void;
+  initial?: CustomMetric;
+}
+
+// 数值快速分箱预设
+const numericQuickBins = [
+  {
+    label: '等距 5 段（0-100）',
+    ranges: [
+      { label: '0-20', min: 0, max: 20 },
+      { label: '20-40', min: 20, max: 40 },
+      { label: '40-60', min: 40, max: 60 },
+      { label: '60-80', min: 60, max: 80 },
+      { label: '80-100', min: 80, max: 100 },
+    ],
+  },
+  {
+    label: '信用分常用（4 段）',
+    ranges: [
+      { label: '<500', max: 500 },
+      { label: '500-650', min: 500, max: 650 },
+      { label: '650-750', min: 650, max: 750 },
+      { label: '≥750', min: 750 },
+    ],
+  },
+  {
+    label: '金额（万）',
+    ranges: [
+      { label: '0-1万', min: 0, max: 10000 },
+      { label: '1-3万', min: 10000, max: 30000 },
+      { label: '3-5万', min: 30000, max: 50000 },
+      { label: '5-10万', min: 50000, max: 100000 },
+      { label: '10万+', min: 100000 },
+    ],
+  },
+];
+
+const chartTypeOptions: {
+  value: CustomMetricChartType;
+  label: string;
+  desc: string;
+  icon: React.ReactNode;
+}[] = [
+  { value: 'pie', label: '累计饼图', desc: '查看各分箱占比', icon: <PieIcon className="h-4 w-4" /> },
+  { value: 'rankBar', label: '累计柱形排序', desc: '按数量排序展示', icon: <BarChart3 className="h-4 w-4" /> },
+  { value: 'trendBar', label: '时间趋势分布', desc: '按时间堆叠展示', icon: <Activity className="h-4 w-4" /> },
+];
+
+export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: CustomMetricBuilderProps) {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [search, setSearch] = useState('');
+  const [field, setField] = useState<OutputField | null>(null);
+  const [bins, setBins] = useState<BinDefinition>({});
+  const [chartType, setChartType] = useState<CustomMetricChartType>('pie');
+
+  useEffect(() => {
+    if (open) {
+      if (initial) {
+        const f = mockOutputFields.find((x) => x.code === initial.fieldCode);
+        setField(f || null);
+        setBins(initial.bins);
+        setChartType(initial.chartType);
+        setStep(2);
+      } else {
+        setStep(1);
+        setField(null);
+        setBins({});
+        setChartType('pie');
+        setSearch('');
+      }
+    }
+  }, [open, initial]);
+
+  const filteredFields = mockOutputFields.filter(
+    (f) =>
+      f.label.toLowerCase().includes(search.toLowerCase()) ||
+      f.code.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const handleSelectField = (f: OutputField) => {
+    setField(f);
+    // 初始化默认分箱
+    if (f.type === 'boolean') {
+      setBins({
+        enumMap: [
+          { label: '是', values: ['true', '1', 'yes'] },
+          { label: '否', values: ['false', '0', 'no'] },
+        ],
+      });
+    } else if (f.type === 'string') {
+      setBins({ enumMap: [{ label: '分箱1', values: [] }] });
+    } else {
+      setBins({ ranges: [{ label: '区间1' }] });
+    }
+    setStep(2);
+  };
+
+  const handleSave = () => {
+    if (!field) return;
+    const metric: CustomMetric = {
+      id: initial?.id ?? `cm_${Date.now()}`,
+      fieldCode: field.code,
+      fieldLabel: field.label,
+      fieldType: field.type,
+      bins,
+      chartType,
+      createdAt: initial?.createdAt ?? new Date().toISOString(),
+    };
+    onSave(metric);
+    toast.success(initial ? '指标已更新' : '自定义指标已创建');
+    onOpenChange(false);
+  };
+
+  const applyQuickBin = (preset: typeof numericQuickBins[number]) => {
+    setBins({ ranges: preset.ranges });
+    toast.success(`已应用：${preset.label}`);
+  };
+
+  // 分箱编辑 ----- 数值
+  const updateRange = (idx: number, patch: Partial<{ label: string; min: number; max: number }>) => {
+    const ranges = [...(bins.ranges ?? [])];
+    ranges[idx] = { ...ranges[idx], ...patch } as any;
+    setBins({ ranges });
+  };
+  const addRange = () => setBins({ ranges: [...(bins.ranges ?? []), { label: `区间${(bins.ranges?.length ?? 0) + 1}` }] });
+  const removeRange = (idx: number) =>
+    setBins({ ranges: (bins.ranges ?? []).filter((_, i) => i !== idx) });
+
+  // 分箱编辑 ----- 枚举
+  const updateEnum = (idx: number, patch: Partial<{ label: string; values: string[] }>) => {
+    const enumMap = [...(bins.enumMap ?? [])];
+    enumMap[idx] = { ...enumMap[idx], ...patch } as any;
+    setBins({ enumMap });
+  };
+  const addEnum = () =>
+    setBins({ enumMap: [...(bins.enumMap ?? []), { label: `分箱${(bins.enumMap?.length ?? 0) + 1}`, values: [] }] });
+  const removeEnum = (idx: number) =>
+    setBins({ enumMap: (bins.enumMap ?? []).filter((_, i) => i !== idx) });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>{initial ? '编辑自定义指标' : '新建自定义指标'}</DialogTitle>
+          <DialogDescription>
+            从输出字段中挑选指标，定义分箱规则与展示形式
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* 步骤指示 */}
+        <div className="flex items-center gap-2 text-xs">
+          {[
+            { n: 1, label: '选择字段' },
+            { n: 2, label: '分箱定义' },
+            { n: 3, label: '展示形式' },
+          ].map((s, i) => (
+            <div key={s.n} className="flex items-center gap-2">
+              <div
+                className={cn(
+                  'h-6 w-6 rounded-full flex items-center justify-center font-medium',
+                  step >= s.n ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+                )}
+              >
+                {s.n}
+              </div>
+              <span className={step >= s.n ? 'text-foreground font-medium' : 'text-muted-foreground'}>
+                {s.label}
+              </span>
+              {i < 2 && <div className="w-6 h-px bg-border" />}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex-1 overflow-hidden">
+          {step === 1 && (
+            <div className="space-y-3 h-full flex flex-col">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="搜索字段编码或中文名"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8 h-9"
+                />
+              </div>
+              <ScrollArea className="flex-1 max-h-[420px] border rounded-md">
+                <div className="divide-y">
+                  {filteredFields.map((f) => (
+                    <button
+                      key={f.code}
+                      type="button"
+                      onClick={() => handleSelectField(f)}
+                      className="w-full text-left p-3 hover:bg-muted/60 transition-colors flex items-center gap-3"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{f.label}</span>
+                          <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">
+                            {f.code}
+                          </Badge>
+                        </div>
+                        {f.sample && (
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            示例：{f.sample}
+                          </div>
+                        )}
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {f.type === 'number' ? '数值' : f.type === 'boolean' ? '布尔' : '字符串'}
+                      </Badge>
+                    </button>
+                  ))}
+                  {filteredFields.length === 0 && (
+                    <div className="p-6 text-center text-sm text-muted-foreground">
+                      未找到匹配字段
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          )}
+
+          {step === 2 && field && (
+            <ScrollArea className="h-[460px] pr-3">
+              <div className="space-y-4">
+                <div className="rounded-md border bg-muted/30 p-3 flex items-center gap-2">
+                  <span className="font-medium text-sm">{field.label}</span>
+                  <Badge variant="outline" className="font-mono text-[10px]">{field.code}</Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    {field.type === 'number' ? '数值' : field.type === 'boolean' ? '布尔' : '字符串'}
+                  </Badge>
+                </div>
+
+                {field.type === 'number' && (
+                  <>
+                    <div>
+                      <Label className="text-sm flex items-center gap-1.5 mb-2">
+                        <Zap className="h-3.5 w-3.5 text-amber-500" />
+                        快速分箱
+                      </Label>
+                      <div className="flex flex-wrap gap-2">
+                        {numericQuickBins.map((p) => (
+                          <Button
+                            key={p.label}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => applyQuickBin(p)}
+                            className="h-7 text-xs"
+                          >
+                            {p.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-sm">分箱区间</Label>
+                        <Button type="button" variant="ghost" size="sm" onClick={addRange} className="h-7">
+                          <Plus className="h-3.5 w-3.5 mr-1" />添加区间
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        {(bins.ranges ?? []).map((r, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <Input
+                              placeholder="标签"
+                              value={r.label}
+                              onChange={(e) => updateRange(i, { label: e.target.value })}
+                              className="h-8 w-32"
+                            />
+                            <Input
+                              type="number"
+                              placeholder="最小值"
+                              value={r.min ?? ''}
+                              onChange={(e) =>
+                                updateRange(i, { min: e.target.value === '' ? undefined : Number(e.target.value) } as any)
+                              }
+                              className="h-8 flex-1"
+                            />
+                            <span className="text-xs text-muted-foreground">≤ x &lt;</span>
+                            <Input
+                              type="number"
+                              placeholder="最大值"
+                              value={r.max ?? ''}
+                              onChange={(e) =>
+                                updateRange(i, { max: e.target.value === '' ? undefined : Number(e.target.value) } as any)
+                              }
+                              className="h-8 flex-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeRange(i)}
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {(field.type === 'string' || field.type === 'boolean') && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm">枚举分箱</Label>
+                      <Button type="button" variant="ghost" size="sm" onClick={addEnum} className="h-7">
+                        <Plus className="h-3.5 w-3.5 mr-1" />添加分箱
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {(bins.enumMap ?? []).map((b, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <Input
+                            placeholder="分箱标签"
+                            value={b.label}
+                            onChange={(e) => updateEnum(i, { label: e.target.value })}
+                            className="h-8 w-32"
+                          />
+                          <Input
+                            placeholder="匹配值（逗号分隔）"
+                            value={b.values.join(',')}
+                            onChange={(e) =>
+                              updateEnum(i, {
+                                values: e.target.value
+                                  .split(',')
+                                  .map((s) => s.trim())
+                                  .filter(Boolean),
+                              })
+                            }
+                            className="h-8 flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeEnum(i)}
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-3">
+              <Label className="text-sm">选择展示形式</Label>
+              <RadioGroup
+                value={chartType}
+                onValueChange={(v) => setChartType(v as CustomMetricChartType)}
+                className="grid grid-cols-1 gap-2"
+              >
+                {chartTypeOptions.map((opt) => (
+                  <label
+                    key={opt.value}
+                    htmlFor={`chart-${opt.value}`}
+                    className={cn(
+                      'flex items-center gap-3 rounded-md border p-3 cursor-pointer transition-colors',
+                      chartType === opt.value
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:bg-muted/50',
+                    )}
+                  >
+                    <RadioGroupItem id={`chart-${opt.value}`} value={opt.value} />
+                    <div className="text-primary">{opt.icon}</div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{opt.label}</div>
+                      <div className="text-xs text-muted-foreground">{opt.desc}</div>
+                    </div>
+                  </label>
+                ))}
+              </RadioGroup>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2">
+          {step > 1 && (
+            <Button variant="outline" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}>
+              上一步
+            </Button>
+          )}
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>取消</Button>
+          {step === 1 && (
+            <Button disabled>请选择字段</Button>
+          )}
+          {step === 2 && (
+            <Button onClick={() => setStep(3)} disabled={!field}>下一步</Button>
+          )}
+          {step === 3 && (
+            <Button onClick={handleSave}>保存指标</Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
