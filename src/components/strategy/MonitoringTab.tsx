@@ -1,5 +1,11 @@
 import { useState, useMemo } from 'react';
-import { StrategyDetailMetrics, MetricTrendPoint, MonitoringFilter, MonitoringGranularity } from '@/types/project';
+import {
+  StrategyDetailMetrics,
+  MetricTrendPoint,
+  MonitoringFilter,
+  MonitoringGranularity,
+  StrategyVersion,
+} from '@/types/project';
 import { MetricCard } from './MetricCard';
 import { TrendChart } from './TrendChart';
 import { MonitoringFilters } from './MonitoringFilters';
@@ -9,6 +15,7 @@ import { DistributionChart } from './DistributionChart';
 import { NodeVerdictChart } from './NodeVerdictChart';
 import { RuleHitTable } from './RuleHitTable';
 import { LatencyChart } from './LatencyChart';
+import { CustomMetricsModule } from './CustomMetricsModule';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   mockRejectReasons,
@@ -25,7 +32,9 @@ import {
   CreditCard,
   Percent,
   Gauge,
+  Target,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface MonitoringTabProps {
   metrics: StrategyDetailMetrics;
@@ -36,6 +45,8 @@ interface MonitoringTabProps {
     tp99: MetricTrendPoint[];
   };
   showCreditScenario?: boolean;
+  versions?: StrategyVersion[];
+  strategyId?: string;
 }
 
 function formatNumber(num: number): string {
@@ -44,9 +55,6 @@ function formatNumber(num: number): string {
   return num.toString();
 }
 
-/**
- * 可横向滚动的趋势图容器：分钟粒度下展开更宽以支持横向拖拉查看
- */
 interface ScrollableTrendCardProps {
   title: React.ReactNode;
   icon?: React.ReactNode;
@@ -112,14 +120,44 @@ function ScrollableTrendCard({
   );
 }
 
-export function MonitoringTab({ metrics, showCreditScenario = true }: MonitoringTabProps) {
+function todayDate() {
+  return new Date();
+}
+
+export function MonitoringTab({
+  metrics,
+  showCreditScenario = true,
+  versions = [],
+  strategyId = 'default',
+}: MonitoringTabProps) {
   const [filter, setFilter] = useState<MonitoringFilter>({
     businessCode: 'all',
     customerTag: 'all',
     granularity: 'hour',
   });
 
-  // 每个趋势图独立的聚合粒度
+  // 全局：版本 + 日期
+  const versionOptions = useMemo(() => {
+    const opts = [{ value: 'all', label: '全部版本' }];
+    versions.forEach((v) => {
+      const tag =
+        v.status === 'effective'
+          ? '生效'
+          : v.status === 'grayscale'
+          ? '灰度'
+          : v.status === 'approving'
+          ? '审批中'
+          : v.status === 'draft'
+          ? '草稿'
+          : '已失效';
+      opts.push({ value: v.id, label: `${v.versionNumber} · ${tag}` });
+    });
+    return opts;
+  }, [versions]);
+
+  const [selectedVersion, setSelectedVersion] = useState<string>('all');
+  const [selectedDate, setSelectedDate] = useState<Date>(todayDate());
+
   const [callsGran, setCallsGran] = useState<MonitoringGranularity>('hour');
   const [passRateGran, setPassRateGran] = useState<MonitoringGranularity>('hour');
   const [errorRateGran, setErrorRateGran] = useState<MonitoringGranularity>('hour');
@@ -148,13 +186,44 @@ export function MonitoringTab({ metrics, showCreditScenario = true }: Monitoring
   const passRateCompare = metrics.passRateCompare ?? (metrics.passRate - metrics.sameTermPassRate);
   const errorRateCompare = metrics.errorRateCompare ?? -0.05;
 
+  // 规则命中率：所有规则总命中数 / 申请数
+  const totalRuleHits = mockRuleHits.reduce((s, r) => s + r.hitCount, 0);
+  const ruleHitRate = metrics.todayCalls > 0 ? (totalRuleHits / metrics.todayCalls) * 100 : 0;
+
+  // 跳转日志（toast）
+  const jumpToLog = (label: string, params: Record<string, string>) => {
+    const paramStr = Object.entries(params).map(([k, v]) => `${k}=${v}`).join(' & ');
+    toast.info(`跳转到日志：${label}`, { description: paramStr });
+  };
+
+  const versionLabel =
+    selectedVersion === 'all'
+      ? '全部版本'
+      : versionOptions.find((o) => o.value === selectedVersion)?.label ?? '';
+
   return (
     <div className="space-y-6">
-      {/* 筛选条件 */}
-      <MonitoringFilters filter={filter} onFilterChange={setFilter} />
+      {/* 全局筛选条件 */}
+      <MonitoringFilters
+        filter={filter}
+        onFilterChange={setFilter}
+        versionOptions={versionOptions}
+        selectedVersion={selectedVersion}
+        onVersionChange={setSelectedVersion}
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
+      />
+
+      {/* 当前作用范围提示 */}
+      <div className="text-xs text-muted-foreground -mt-3">
+        当前数据范围：<span className="text-foreground font-medium">{versionLabel}</span> ·{' '}
+        <span className="text-foreground font-medium">
+          {selectedDate.toISOString().slice(0, 10)}
+        </span>
+      </div>
 
       {/* 核心指标概览 */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <MetricCard
           title="授信申请数"
           value={formatNumber(metrics.todayCalls)}
@@ -182,6 +251,13 @@ export function MonitoringTab({ metrics, showCreditScenario = true }: Monitoring
           icon={<AlertTriangle className="h-4 w-4" />}
         />
         <MetricCard
+          title="规则命中率"
+          value={ruleHitRate.toFixed(1)}
+          unit="%"
+          variant="default"
+          icon={<Target className="h-4 w-4" />}
+        />
+        <MetricCard
           title="TP99 耗时"
           value={metrics.tp99}
           unit="ms"
@@ -197,7 +273,7 @@ export function MonitoringTab({ metrics, showCreditScenario = true }: Monitoring
         data={callsTrend}
         granularity={callsGran}
         onGranularityChange={setCallsGran}
-        subLabel={callsGran === 'hour' ? '按小时聚合 · 今日' : '按分钟聚合 · 最近 60 分钟（可横向拖动）'}
+        subLabel={callsGran === 'hour' ? '按小时聚合' : '按分钟聚合（可横向拖动）'}
         showArea
         height={220}
       />
@@ -216,13 +292,41 @@ export function MonitoringTab({ metrics, showCreditScenario = true }: Monitoring
           height={240}
         />
 
-        <RejectReasonChart data={mockRejectReasons} />
+        <RejectReasonChart
+          data={mockRejectReasons}
+          onItemClick={(item) =>
+            jumpToLog(`拒绝原因 - ${item.label}`, {
+              reject_code: item.code,
+              version: selectedVersion,
+              date: selectedDate.toISOString().slice(0, 10),
+            })
+          }
+        />
       </div>
 
       {/* 节点通过率 + 规则命中（两列并排） */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <NodeVerdictChart data={mockNodeVerdicts} />
-        <RuleHitTable data={mockRuleHits} />
+        <NodeVerdictChart
+          data={mockNodeVerdicts}
+          onNodeClick={(node) =>
+            jumpToLog(`节点拒绝 - ${node.nodeName}`, {
+              node_id: node.nodeId,
+              version: selectedVersion,
+              date: selectedDate.toISOString().slice(0, 10),
+            })
+          }
+        />
+        <RuleHitTable
+          data={mockRuleHits}
+          totalApplications={metrics.todayCalls}
+          onRowClick={(rule) =>
+            jumpToLog(`规则命中 - ${rule.ruleName}`, {
+              rule_code: rule.ruleCode,
+              version: selectedVersion,
+              date: selectedDate.toISOString().slice(0, 10),
+            })
+          }
+        />
       </div>
 
       {/* 授信场景：额度 + 定价分布 */}
@@ -233,17 +337,31 @@ export function MonitoringTab({ metrics, showCreditScenario = true }: Monitoring
             icon={<CreditCard className="h-4 w-4 text-primary" />}
             data={mockCreditLimitDistribution}
             valueLabel="申请数"
+            onBucketClick={(b) =>
+              jumpToLog(`授信额度 - ${b.range}`, {
+                credit_limit_range: b.range,
+                version: selectedVersion,
+                date: selectedDate.toISOString().slice(0, 10),
+              })
+            }
           />
           <DistributionChart
             title="定价分布（年化利率）"
             icon={<Percent className="h-4 w-4 text-primary" />}
             data={mockPricingDistribution}
             valueLabel="申请数"
+            onBucketClick={(b) =>
+              jumpToLog(`定价 - ${b.range}`, {
+                apr_range: b.range,
+                version: selectedVersion,
+                date: selectedDate.toISOString().slice(0, 10),
+              })
+            }
           />
         </div>
       )}
 
-      {/* 性能指标：耗时 + 异常率 */}
+      {/* 性能指标 */}
       <div className="grid gap-4 lg:grid-cols-2">
         <LatencyChart tp50={tp50} tp95={tp95} tp99={metrics.tp99} />
         <ScrollableTrendCard
@@ -256,6 +374,11 @@ export function MonitoringTab({ metrics, showCreditScenario = true }: Monitoring
           unit="%"
           height={276}
         />
+      </div>
+
+      {/* 自定义指标 */}
+      <div className="pt-2">
+        <CustomMetricsModule storageKey={`custom_metrics_${strategyId}`} />
       </div>
     </div>
   );

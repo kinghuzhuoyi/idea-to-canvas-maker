@@ -145,6 +145,8 @@ export default function StrategyDetail() {
             <MonitoringTab
               metrics={metrics}
               trendData={trendData}
+              versions={versions}
+              strategyId={strategyId}
             />
           </TabsContent>
 

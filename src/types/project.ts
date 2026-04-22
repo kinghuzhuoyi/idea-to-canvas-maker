@@ -119,6 +119,41 @@ export interface MonitoringFilter {
   granularity: MonitoringGranularity; // 聚合粒度
 }
 
+// ============ 自定义指标模块 ============
+
+// 输出字段类型
+export type OutputFieldType = 'number' | 'boolean' | 'string';
+
+// 输出字段定义（系统提供的字段池）
+export interface OutputField {
+  code: string;
+  label: string;
+  type: OutputFieldType;
+  sample?: string;        // 示例值
+}
+
+// 分箱定义
+export interface BinDefinition {
+  // 数值类型分箱：[min, max) 区间
+  ranges?: { label: string; min?: number; max?: number }[];
+  // 字符串/布尔类型分箱：枚举映射
+  enumMap?: { label: string; values: string[] }[];
+}
+
+// 自定义指标展示类型
+export type CustomMetricChartType = 'pie' | 'rankBar' | 'trendBar';
+
+// 自定义指标
+export interface CustomMetric {
+  id: string;
+  fieldCode: string;
+  fieldLabel: string;
+  fieldType: OutputFieldType;
+  bins: BinDefinition;
+  chartType: CustomMetricChartType;
+  createdAt: string;
+}
+
 // 版本状态
 export type VersionStatus = 'effective' | 'grayscale' | 'approving' | 'draft' | 'invalid';
 

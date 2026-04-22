@@ -5,7 +5,32 @@ import {
   RuleHitItem,
   MetricTrendPoint,
   MonitoringGranularity,
+  OutputField,
 } from '@/types/project';
+
+// 输出字段池（用于自定义指标挑选）
+export const mockOutputFields: OutputField[] = [
+  { code: 'credit_score', label: '信用分', type: 'number', sample: '680' },
+  { code: 'credit_limit', label: '授信额度', type: 'number', sample: '50000' },
+  { code: 'apr', label: '年化利率', type: 'number', sample: '18.5' },
+  { code: 'age', label: '客户年龄', type: 'number', sample: '32' },
+  { code: 'monthly_income', label: '月收入', type: 'number', sample: '8500' },
+  { code: 'debt_ratio', label: '负债率', type: 'number', sample: '0.45' },
+  { code: 'multi_loan_count', label: '多头借贷数', type: 'number', sample: '3' },
+  { code: 'risk_level', label: '风险等级', type: 'string', sample: 'M2' },
+  { code: 'customer_segment', label: '客群分层', type: 'string', sample: 'A1' },
+  { code: 'channel_code', label: '渠道编码', type: 'string', sample: 'CH_001' },
+  { code: 'device_os', label: '设备系统', type: 'string', sample: 'iOS' },
+  { code: 'is_new_user', label: '是否新客', type: 'boolean', sample: 'true' },
+  { code: 'is_vip', label: '是否VIP', type: 'boolean', sample: 'false' },
+  { code: 'has_overdue', label: '是否有逾期', type: 'boolean', sample: 'false' },
+  { code: 'occupation_type', label: '职业类型', type: 'string', sample: '工薪' },
+  { code: 'city_tier', label: '城市等级', type: 'string', sample: 'T1' },
+  { code: 'fpd_score', label: '首逾评分', type: 'number', sample: '720' },
+  { code: 'fraud_score', label: '欺诈评分', type: 'number', sample: '120' },
+  { code: 'product_code', label: '产品编码', type: 'string', sample: 'PROD_A' },
+  { code: 'is_repeat_apply', label: '是否复贷', type: 'boolean', sample: 'true' },
+];
 
 // 业务场景选项
 export const businessCodeOptions = [
