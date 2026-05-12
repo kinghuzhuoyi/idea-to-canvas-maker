@@ -1,8 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LatencyTrendPoint, generateLatencyTrend } from '@/data/mockMonitoringData';
-import { MonitoringGranularity } from '@/types/project';
 import { Timer } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -13,7 +12,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { ChartGranularityToggle } from './ChartGranularityToggle';
 
 interface LatencyChartProps {
   tp50: number;
@@ -23,10 +21,7 @@ interface LatencyChartProps {
 }
 
 export function LatencyChart({ tp50, tp95, tp99 }: LatencyChartProps) {
-  const [granularity, setGranularity] = useState<MonitoringGranularity>('hour');
-  const data = useMemo(() => generateLatencyTrend(granularity), [granularity]);
-  const isMinute = granularity === 'minute';
-  const chartMinWidth = isMinute ? Math.max(1200, data.length * 22) : undefined;
+  const data = useMemo(() => generateLatencyTrend('hour'), []);
 
   return (
     <Card>
@@ -35,8 +30,8 @@ export function LatencyChart({ tp50, tp95, tp99 }: LatencyChartProps) {
           <CardTitle className="text-base flex items-center gap-2">
             <Timer className="h-4 w-4 text-primary" />
             耗时数据（TP50 / TP95 / TP99）
+            <span className="text-xs font-normal text-muted-foreground ml-2">按小时</span>
           </CardTitle>
-          <ChartGranularityToggle value={granularity} onChange={setGranularity} />
         </div>
       </CardHeader>
       <CardContent>
@@ -63,19 +58,18 @@ export function LatencyChart({ tp50, tp95, tp99 }: LatencyChartProps) {
             </div>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <div style={{ minWidth: chartMinWidth }}>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={data} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="time"
-                  tick={{ fontSize: 11 }}
-                  stroke="hsl(var(--muted-foreground))"
-                  tickLine={false}
-                  interval={isMinute ? 2 : 'preserveStartEnd'}
-                  minTickGap={8}
-                />
+        <div>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={data} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis
+                dataKey="time"
+                tick={{ fontSize: 11 }}
+                stroke="hsl(var(--muted-foreground))"
+                tickLine={false}
+                interval="preserveStartEnd"
+                minTickGap={8}
+              />
                 <YAxis
                   tick={{ fontSize: 11 }}
                   stroke="hsl(var(--muted-foreground))"
@@ -96,9 +90,8 @@ export function LatencyChart({ tp50, tp95, tp99 }: LatencyChartProps) {
                 <Line type="monotone" dataKey="tp50" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="tp95" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="tp99" stroke="hsl(var(--chart-5))" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </CardContent>
     </Card>

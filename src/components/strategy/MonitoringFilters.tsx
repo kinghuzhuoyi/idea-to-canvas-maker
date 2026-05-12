@@ -1,5 +1,19 @@
+import { useState } from 'react';
 import { MonitoringFilter } from '@/types/project';
-import { businessCodeOptions, customerTagOptions } from '@/data/mockMonitoringData';
+import { businessCodeOptions } from '@/data/mockMonitoringData';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import {
   Select,
   SelectContent,
@@ -7,14 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Filter, Calendar as CalendarIcon, GitBranch } from 'lucide-react';
+import { Filter, Calendar as CalendarIcon, GitBranch, Check, ChevronsUpDown, Briefcase } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -43,6 +52,9 @@ export function MonitoringFilters({
   selectedDate,
   onDateChange,
 }: MonitoringFiltersProps) {
+  const [bizOpen, setBizOpen] = useState(false);
+  const currentBiz = businessCodeOptions.find((o) => o.value === filter.businessCode);
+
   return (
     <div className="rounded-lg border bg-card p-4 flex flex-wrap items-center gap-4">
       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -105,42 +117,53 @@ export function MonitoringFilters({
         </div>
       )}
 
+      {/* 业务场景：可检索 */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground">业务场景</span>
-        <Select
-          value={filter.businessCode}
-          onValueChange={(v) => onFilterChange({ ...filter, businessCode: v })}
-        >
-          <SelectTrigger className="h-8 w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {businessCodeOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground">客户标签</span>
-        <Select
-          value={filter.customerTag}
-          onValueChange={(v) => onFilterChange({ ...filter, customerTag: v })}
-        >
-          <SelectTrigger className="h-8 w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {customerTagOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <span className="text-xs text-muted-foreground flex items-center gap-1">
+          <Briefcase className="h-3 w-3" />
+          业务场景
+        </span>
+        <Popover open={bizOpen} onOpenChange={setBizOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              role="combobox"
+              className="h-8 w-60 justify-between font-normal"
+            >
+              <span className="truncate">{currentBiz?.label ?? '选择业务场景'}</span>
+              <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[280px] p-0 bg-popover" align="start">
+            <Command>
+              <CommandInput placeholder="搜索 business_code 或名称" className="h-9" />
+              <CommandList>
+                <CommandEmpty>未找到业务场景</CommandEmpty>
+                <CommandGroup>
+                  {businessCodeOptions.map((opt) => (
+                    <CommandItem
+                      key={opt.value}
+                      value={opt.label}
+                      onSelect={() => {
+                        onFilterChange({ ...filter, businessCode: opt.value });
+                        setBizOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          'mr-2 h-3.5 w-3.5',
+                          filter.businessCode === opt.value ? 'opacity-100' : 'opacity-0',
+                        )}
+                      />
+                      <span className="truncate">{opt.label}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );

@@ -41,39 +41,6 @@ interface CustomMetricBuilderProps {
   initial?: CustomMetric;
 }
 
-// 数值快速分箱预设
-const numericQuickBins = [
-  {
-    label: '等距 5 段（0-100）',
-    ranges: [
-      { label: '0-20', min: 0, max: 20 },
-      { label: '20-40', min: 20, max: 40 },
-      { label: '40-60', min: 40, max: 60 },
-      { label: '60-80', min: 60, max: 80 },
-      { label: '80-100', min: 80, max: 100 },
-    ],
-  },
-  {
-    label: '信用分常用（4 段）',
-    ranges: [
-      { label: '<500', max: 500 },
-      { label: '500-650', min: 500, max: 650 },
-      { label: '650-750', min: 650, max: 750 },
-      { label: '≥750', min: 750 },
-    ],
-  },
-  {
-    label: '金额（万）',
-    ranges: [
-      { label: '0-1万', min: 0, max: 10000 },
-      { label: '1-3万', min: 10000, max: 30000 },
-      { label: '3-5万', min: 30000, max: 50000 },
-      { label: '5-10万', min: 50000, max: 100000 },
-      { label: '10万+', min: 100000 },
-    ],
-  },
-];
-
 const chartTypeOptions: {
   value: CustomMetricChartType;
   label: string;
@@ -118,7 +85,6 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
 
   const handleSelectField = (f: OutputField) => {
     setField(f);
-    // 初始化默认分箱
     if (f.type === 'boolean') {
       setBins({
         enumMap: [
@@ -126,12 +92,14 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
           { label: '否', values: ['false', '0', 'no'] },
         ],
       });
+      setStep(3); // 布尔：跳过分箱
     } else if (f.type === 'string') {
-      setBins({ enumMap: [{ label: '分箱1', values: [] }] });
+      setBins({ enumMap: [] });
+      setStep(3); // 字符串：跳过分箱
     } else {
       setBins({ ranges: [{ label: '区间1' }] });
+      setStep(2);
     }
-    setStep(2);
   };
 
   const handleSave = () => {
@@ -150,9 +118,33 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
     onOpenChange(false);
   };
 
-  const applyQuickBin = (preset: typeof numericQuickBins[number]) => {
-    setBins({ ranges: preset.ranges });
-    toast.success(`已应用：${preset.label}`);
+  // 平均分箱（快速分箱）：开始 / 结束 / 箱数
+  const [quickStart, setQuickStart] = useState<string>('0');
+  const [quickEnd, setQuickEnd] = useState<string>('100');
+  const [quickCount, setQuickCount] = useState<string>('5');
+
+  const applyEqualBin = () => {
+    const start = Number(quickStart);
+    const end = Number(quickEnd);
+    const count = Math.floor(Number(quickCount));
+    if (!Number.isFinite(start) || !Number.isFinite(end) || !Number.isFinite(count)) {
+      toast.error('请输入有效的开始、结束、箱数');
+      return;
+    }
+    if (end <= start || count < 1 || count > 50) {
+      toast.error('结束值需大于开始值，箱数需在 1~50 之间');
+      return;
+    }
+    const stepVal = (end - start) / count;
+    const isInt = field?.numberSubtype === 'integer';
+    const fmt = (n: number) => (isInt ? Math.round(n).toString() : Number(n.toFixed(2)).toString());
+    const ranges = Array.from({ length: count }, (_, i) => {
+      const min = start + stepVal * i;
+      const max = start + stepVal * (i + 1);
+      return { label: `${fmt(min)}-${fmt(max)}`, min, max };
+    });
+    setBins({ ranges });
+    toast.success(`已生成 ${count} 个平均分箱`);
   };
 
   // 分箱编辑 ----- 数值
@@ -165,16 +157,6 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
   const removeRange = (idx: number) =>
     setBins({ ranges: (bins.ranges ?? []).filter((_, i) => i !== idx) });
 
-  // 分箱编辑 ----- 枚举
-  const updateEnum = (idx: number, patch: Partial<{ label: string; values: string[] }>) => {
-    const enumMap = [...(bins.enumMap ?? [])];
-    enumMap[idx] = { ...enumMap[idx], ...patch } as any;
-    setBins({ enumMap });
-  };
-  const addEnum = () =>
-    setBins({ enumMap: [...(bins.enumMap ?? []), { label: `分箱${(bins.enumMap?.length ?? 0) + 1}`, values: [] }] });
-  const removeEnum = (idx: number) =>
-    setBins({ enumMap: (bins.enumMap ?? []).filter((_, i) => i !== idx) });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -186,13 +168,13 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
           </DialogDescription>
         </DialogHeader>
 
-        {/* 步骤指示 */}
+        {/* 步骤指示（非数值类型隐藏分箱步骤） */}
         <div className="flex items-center gap-2 text-xs">
-          {[
+          {([
             { n: 1, label: '选择字段' },
-            { n: 2, label: '分箱定义' },
+            ...(field && field.type !== 'number' ? [] : [{ n: 2, label: '分箱定义' }]),
             { n: 3, label: '展示形式' },
-          ].map((s, i) => (
+          ] as { n: number; label: string }[]).map((s, i, arr) => (
             <div key={s.n} className="flex items-center gap-2">
               <div
                 className={cn(
@@ -205,7 +187,7 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
               <span className={step >= s.n ? 'text-foreground font-medium' : 'text-muted-foreground'}>
                 {s.label}
               </span>
-              {i < 2 && <div className="w-6 h-px bg-border" />}
+              {i < arr.length - 1 && <div className="w-6 h-px bg-border" />}
             </div>
           ))}
         </div>
@@ -238,14 +220,20 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
                             {f.code}
                           </Badge>
                         </div>
-                        {f.sample && (
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            示例：{f.sample}
+                        {f.description && (
+                          <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                            {f.description}
                           </div>
                         )}
                       </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {f.type === 'number' ? '数值' : f.type === 'boolean' ? '布尔' : '字符串'}
+                      <Badge variant="secondary" className="text-xs shrink-0">
+                        {f.type === 'number'
+                          ? f.numberSubtype === 'decimal'
+                            ? '小数'
+                            : '整数'
+                          : f.type === 'boolean'
+                          ? '布尔'
+                          : '字符串'}
                       </Badge>
                     </button>
                   ))}
@@ -272,25 +260,48 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
 
                 {field.type === 'number' && (
                   <>
-                    <div>
-                      <Label className="text-sm flex items-center gap-1.5 mb-2">
+                    <div className="rounded-md border bg-muted/20 p-3 space-y-3">
+                      <Label className="text-sm flex items-center gap-1.5">
                         <Zap className="h-3.5 w-3.5 text-amber-500" />
-                        快速分箱
+                        快速分箱（平均分箱）
                       </Label>
-                      <div className="flex flex-wrap gap-2">
-                        {numericQuickBins.map((p) => (
-                          <Button
-                            key={p.label}
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => applyQuickBin(p)}
-                            className="h-7 text-xs"
-                          >
-                            {p.label}
-                          </Button>
-                        ))}
+                      <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">
+                        <div>
+                          <Label className="text-xs text-muted-foreground mb-1 block">开始</Label>
+                          <Input
+                            type="number"
+                            value={quickStart}
+                            onChange={(e) => setQuickStart(e.target.value)}
+                            className="h-8"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground mb-1 block">结束</Label>
+                          <Input
+                            type="number"
+                            value={quickEnd}
+                            onChange={(e) => setQuickEnd(e.target.value)}
+                            className="h-8"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground mb-1 block">箱数</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={50}
+                            value={quickCount}
+                            onChange={(e) => setQuickCount(e.target.value)}
+                            className="h-8"
+                          />
+                        </div>
+                        <Button type="button" size="sm" onClick={applyEqualBin} className="h-8">
+                          生成
+                        </Button>
                       </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        将 [开始, 结束) 平均切分为指定箱数{field.numberSubtype === 'integer' ? '（整数取整）' : ''}
+                      </p>
                     </div>
 
                     <div>
@@ -343,51 +354,6 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
                     </div>
                   </>
                 )}
-
-                {(field.type === 'string' || field.type === 'boolean') && (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-sm">枚举分箱</Label>
-                      <Button type="button" variant="ghost" size="sm" onClick={addEnum} className="h-7">
-                        <Plus className="h-3.5 w-3.5 mr-1" />添加分箱
-                      </Button>
-                    </div>
-                    <div className="space-y-2">
-                      {(bins.enumMap ?? []).map((b, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <Input
-                            placeholder="分箱标签"
-                            value={b.label}
-                            onChange={(e) => updateEnum(i, { label: e.target.value })}
-                            className="h-8 w-32"
-                          />
-                          <Input
-                            placeholder="匹配值（逗号分隔）"
-                            value={b.values.join(',')}
-                            onChange={(e) =>
-                              updateEnum(i, {
-                                values: e.target.value
-                                  .split(',')
-                                  .map((s) => s.trim())
-                                  .filter(Boolean),
-                              })
-                            }
-                            className="h-8 flex-1"
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeEnum(i)}
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </ScrollArea>
           )}
@@ -426,20 +392,23 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
 
         <DialogFooter className="gap-2">
           {step > 1 && (
-            <Button variant="outline" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                // 非数值类型：从 step 3 直接回到 step 1
+                if (step === 3 && field && field.type !== 'number') setStep(1);
+                else setStep((s) => (s - 1) as 1 | 2 | 3);
+              }}
+            >
               上一步
             </Button>
           )}
           <Button variant="ghost" onClick={() => onOpenChange(false)}>取消</Button>
-          {step === 1 && (
-            <Button disabled>请选择字段</Button>
-          )}
+          {step === 1 && <Button disabled>请选择字段</Button>}
           {step === 2 && (
             <Button onClick={() => setStep(3)} disabled={!field}>下一步</Button>
           )}
-          {step === 3 && (
-            <Button onClick={handleSave}>保存指标</Button>
-          )}
+          {step === 3 && <Button onClick={handleSave}>保存指标</Button>}
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -11,7 +11,7 @@ import { TrendChart } from './TrendChart';
 import { MonitoringFilters } from './MonitoringFilters';
 import { ChartGranularityToggle } from './ChartGranularityToggle';
 import { RejectReasonChart } from './RejectReasonChart';
-import { DistributionChart } from './DistributionChart';
+
 import { NodeVerdictChart } from './NodeVerdictChart';
 import { RuleHitTable } from './RuleHitTable';
 import { LatencyChart } from './LatencyChart';
@@ -19,8 +19,6 @@ import { CustomMetricsModule } from './CustomMetricsModule';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   mockRejectReasons,
-  mockCreditLimitDistribution,
-  mockPricingDistribution,
   mockNodeVerdicts,
   mockRuleHits,
   generateTrendByGranularity,
@@ -29,10 +27,7 @@ import {
   FileCheck,
   CheckCircle2,
   AlertTriangle,
-  CreditCard,
-  Percent,
   Gauge,
-  Target,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -132,7 +127,6 @@ export function MonitoringTab({
 }: MonitoringTabProps) {
   const [filter, setFilter] = useState<MonitoringFilter>({
     businessCode: 'all',
-    customerTag: 'all',
     granularity: 'hour',
   });
 
@@ -159,7 +153,8 @@ export function MonitoringTab({
   const [selectedDate, setSelectedDate] = useState<Date>(todayDate());
 
   const [callsGran, setCallsGran] = useState<MonitoringGranularity>('hour');
-  const [passRateGran, setPassRateGran] = useState<MonitoringGranularity>('hour');
+  // 通过率趋势：仅按小时
+  const passRateGran: MonitoringGranularity = 'hour';
   const [errorRateGran, setErrorRateGran] = useState<MonitoringGranularity>('hour');
 
   const callsTrend = useMemo(
@@ -184,11 +179,8 @@ export function MonitoringTab({
   const tp95 = metrics.tp95 ?? Math.round(metrics.tp99 * 0.75);
   const tp50 = metrics.tp50 ?? Math.round(metrics.tp99 * 0.35);
   const passRateCompare = metrics.passRateCompare ?? (metrics.passRate - metrics.sameTermPassRate);
-  const errorRateCompare = metrics.errorRateCompare ?? -0.05;
-
-  // 规则命中率：所有规则总命中数 / 申请数
-  const totalRuleHits = mockRuleHits.reduce((s, r) => s + r.hitCount, 0);
-  const ruleHitRate = metrics.todayCalls > 0 ? (totalRuleHits / metrics.todayCalls) * 100 : 0;
+  // TP99 环比昨日：mock 一个 -8% ~ +8% 的对比
+  const tp99Compare = useMemo(() => Number(((Math.random() - 0.5) * 16).toFixed(1)), [metrics.tp99]);
 
   // 跳转日志（toast）
   const jumpToLog = (label: string, params: Record<string, string>) => {
@@ -223,9 +215,9 @@ export function MonitoringTab({
       </div>
 
       {/* 核心指标概览 */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
-          title="授信申请数"
+          title="申请数"
           value={formatNumber(metrics.todayCalls)}
           trend={metrics.callsCompare}
           trendLabel="环比昨日同时段"
@@ -245,52 +237,56 @@ export function MonitoringTab({
           title="请求异常率"
           value={metrics.errorRate.toFixed(2)}
           unit="%"
-          trend={errorRateCompare}
-          trendLabel="环比昨日全天"
           variant={metrics.errorRate <= 0.1 ? 'success' : metrics.errorRate <= 0.3 ? 'default' : 'danger'}
           icon={<AlertTriangle className="h-4 w-4" />}
-        />
-        <MetricCard
-          title="规则命中率"
-          value={ruleHitRate.toFixed(1)}
-          unit="%"
-          variant="default"
-          icon={<Target className="h-4 w-4" />}
         />
         <MetricCard
           title="TP99 耗时"
           value={metrics.tp99}
           unit="ms"
+          trend={tp99Compare}
+          trendLabel="环比昨日"
           variant={metrics.tp99 <= 50 ? 'success' : metrics.tp99 <= 100 ? 'default' : 'warning'}
           icon={<Gauge className="h-4 w-4" />}
         />
       </div>
 
-      {/* 业务量趋势 */}
+      {/* 业务量趋势：今日 vs 昨日 */}
       <ScrollableTrendCard
         title="授信申请量趋势"
         icon={<FileCheck className="h-4 w-4 text-primary" />}
         data={callsTrend}
         granularity={callsGran}
         onGranularityChange={setCallsGran}
-        subLabel={callsGran === 'hour' ? '按小时聚合' : '按分钟聚合（可横向拖动）'}
+        subLabel="今日 vs 昨日同时段"
+        compareKey="compareValue"
         showArea
         height={220}
       />
 
       {/* 通过率趋势 + 拒绝原因分布 */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <ScrollableTrendCard
-          title="审批通过率趋势"
-          icon={<CheckCircle2 className="h-4 w-4 text-primary" />}
-          data={passRateTrend}
-          granularity={passRateGran}
-          onGranularityChange={setPassRateGran}
-          subLabel="当前 vs 同期"
-          compareKey="compareValue"
-          unit="%"
-          height={240}
-        />
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              审批通过率趋势
+              <span className="text-xs font-normal text-muted-foreground ml-2">
+                当前 vs 同期 · 按小时
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TrendChart
+              data={passRateTrend}
+              title=""
+              compareKey="compareValue"
+              unit="%"
+              height={240}
+              className="border-0 p-0"
+            />
+          </CardContent>
+        </Card>
 
         <RejectReasonChart
           data={mockRejectReasons}
@@ -328,38 +324,6 @@ export function MonitoringTab({
           }
         />
       </div>
-
-      {/* 授信场景：额度 + 定价分布 */}
-      {showCreditScenario && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <DistributionChart
-            title="授信额度分布"
-            icon={<CreditCard className="h-4 w-4 text-primary" />}
-            data={mockCreditLimitDistribution}
-            valueLabel="申请数"
-            onBucketClick={(b) =>
-              jumpToLog(`授信额度 - ${b.range}`, {
-                credit_limit_range: b.range,
-                version: selectedVersion,
-                date: selectedDate.toISOString().slice(0, 10),
-              })
-            }
-          />
-          <DistributionChart
-            title="定价分布（年化利率）"
-            icon={<Percent className="h-4 w-4 text-primary" />}
-            data={mockPricingDistribution}
-            valueLabel="申请数"
-            onBucketClick={(b) =>
-              jumpToLog(`定价 - ${b.range}`, {
-                apr_range: b.range,
-                version: selectedVersion,
-                date: selectedDate.toISOString().slice(0, 10),
-              })
-            }
-          />
-        </div>
-      )}
 
       {/* 性能指标 */}
       <div className="grid gap-4 lg:grid-cols-2">
