@@ -58,19 +58,18 @@ export function LatencyChart({ tp50, tp95, tp99 }: LatencyChartProps) {
             </div>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <div style={{ minWidth: chartMinWidth }}>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={data} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="time"
-                  tick={{ fontSize: 11 }}
-                  stroke="hsl(var(--muted-foreground))"
-                  tickLine={false}
-                  interval={isMinute ? 2 : 'preserveStartEnd'}
-                  minTickGap={8}
-                />
+        <div>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={data} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis
+                dataKey="time"
+                tick={{ fontSize: 11 }}
+                stroke="hsl(var(--muted-foreground))"
+                tickLine={false}
+                interval="preserveStartEnd"
+                minTickGap={8}
+              />
                 <YAxis
                   tick={{ fontSize: 11 }}
                   stroke="hsl(var(--muted-foreground))"
@@ -91,9 +90,8 @@ export function LatencyChart({ tp50, tp95, tp99 }: LatencyChartProps) {
                 <Line type="monotone" dataKey="tp50" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="tp95" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="tp99" stroke="hsl(var(--chart-5))" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </CardContent>
     </Card>
