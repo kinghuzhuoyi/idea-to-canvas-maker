@@ -85,7 +85,6 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
 
   const handleSelectField = (f: OutputField) => {
     setField(f);
-    // 初始化默认分箱
     if (f.type === 'boolean') {
       setBins({
         enumMap: [
@@ -93,12 +92,14 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
           { label: '否', values: ['false', '0', 'no'] },
         ],
       });
+      setStep(3); // 布尔：跳过分箱
     } else if (f.type === 'string') {
-      setBins({ enumMap: [{ label: '分箱1', values: [] }] });
+      setBins({ enumMap: [] });
+      setStep(3); // 字符串：跳过分箱
     } else {
       setBins({ ranges: [{ label: '区间1' }] });
+      setStep(2);
     }
-    setStep(2);
   };
 
   const handleSave = () => {
@@ -117,9 +118,33 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
     onOpenChange(false);
   };
 
-  const applyQuickBin = (preset: typeof numericQuickBins[number]) => {
-    setBins({ ranges: preset.ranges });
-    toast.success(`已应用：${preset.label}`);
+  // 平均分箱（快速分箱）：开始 / 结束 / 箱数
+  const [quickStart, setQuickStart] = useState<string>('0');
+  const [quickEnd, setQuickEnd] = useState<string>('100');
+  const [quickCount, setQuickCount] = useState<string>('5');
+
+  const applyEqualBin = () => {
+    const start = Number(quickStart);
+    const end = Number(quickEnd);
+    const count = Math.floor(Number(quickCount));
+    if (!Number.isFinite(start) || !Number.isFinite(end) || !Number.isFinite(count)) {
+      toast.error('请输入有效的开始、结束、箱数');
+      return;
+    }
+    if (end <= start || count < 1 || count > 50) {
+      toast.error('结束值需大于开始值，箱数需在 1~50 之间');
+      return;
+    }
+    const stepVal = (end - start) / count;
+    const isInt = field?.numberSubtype === 'integer';
+    const fmt = (n: number) => (isInt ? Math.round(n).toString() : Number(n.toFixed(2)).toString());
+    const ranges = Array.from({ length: count }, (_, i) => {
+      const min = start + stepVal * i;
+      const max = start + stepVal * (i + 1);
+      return { label: `${fmt(min)}-${fmt(max)}`, min, max };
+    });
+    setBins({ ranges });
+    toast.success(`已生成 ${count} 个平均分箱`);
   };
 
   // 分箱编辑 ----- 数值
