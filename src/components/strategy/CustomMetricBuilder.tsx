@@ -402,20 +402,23 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
 
         <DialogFooter className="gap-2">
           {step > 1 && (
-            <Button variant="outline" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                // 非数值类型：从 step 3 直接回到 step 1
+                if (step === 3 && field && field.type !== 'number') setStep(1);
+                else setStep((s) => (s - 1) as 1 | 2 | 3);
+              }}
+            >
               上一步
             </Button>
           )}
           <Button variant="ghost" onClick={() => onOpenChange(false)}>取消</Button>
-          {step === 1 && (
-            <Button disabled>请选择字段</Button>
-          )}
+          {step === 1 && <Button disabled>请选择字段</Button>}
           {step === 2 && (
             <Button onClick={() => setStep(3)} disabled={!field}>下一步</Button>
           )}
-          {step === 3 && (
-            <Button onClick={handleSave}>保存指标</Button>
-          )}
+          {step === 3 && <Button onClick={handleSave}>保存指标</Button>}
         </DialogFooter>
       </DialogContent>
     </Dialog>
