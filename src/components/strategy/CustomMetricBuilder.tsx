@@ -157,16 +157,6 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
   const removeRange = (idx: number) =>
     setBins({ ranges: (bins.ranges ?? []).filter((_, i) => i !== idx) });
 
-  // 分箱编辑 ----- 枚举
-  const updateEnum = (idx: number, patch: Partial<{ label: string; values: string[] }>) => {
-    const enumMap = [...(bins.enumMap ?? [])];
-    enumMap[idx] = { ...enumMap[idx], ...patch } as any;
-    setBins({ enumMap });
-  };
-  const addEnum = () =>
-    setBins({ enumMap: [...(bins.enumMap ?? []), { label: `分箱${(bins.enumMap?.length ?? 0) + 1}`, values: [] }] });
-  const removeEnum = (idx: number) =>
-    setBins({ enumMap: (bins.enumMap ?? []).filter((_, i) => i !== idx) });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
