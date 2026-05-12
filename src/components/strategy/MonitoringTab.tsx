@@ -127,7 +127,6 @@ export function MonitoringTab({
 }: MonitoringTabProps) {
   const [filter, setFilter] = useState<MonitoringFilter>({
     businessCode: 'all',
-    customerTag: 'all',
     granularity: 'hour',
   });
 
@@ -154,7 +153,8 @@ export function MonitoringTab({
   const [selectedDate, setSelectedDate] = useState<Date>(todayDate());
 
   const [callsGran, setCallsGran] = useState<MonitoringGranularity>('hour');
-  const [passRateGran, setPassRateGran] = useState<MonitoringGranularity>('hour');
+  // 通过率趋势：仅按小时
+  const passRateGran: MonitoringGranularity = 'hour';
   const [errorRateGran, setErrorRateGran] = useState<MonitoringGranularity>('hour');
 
   const callsTrend = useMemo(
@@ -179,11 +179,8 @@ export function MonitoringTab({
   const tp95 = metrics.tp95 ?? Math.round(metrics.tp99 * 0.75);
   const tp50 = metrics.tp50 ?? Math.round(metrics.tp99 * 0.35);
   const passRateCompare = metrics.passRateCompare ?? (metrics.passRate - metrics.sameTermPassRate);
-  const errorRateCompare = metrics.errorRateCompare ?? -0.05;
-
-  // 规则命中率：所有规则总命中数 / 申请数
-  const totalRuleHits = mockRuleHits.reduce((s, r) => s + r.hitCount, 0);
-  const ruleHitRate = metrics.todayCalls > 0 ? (totalRuleHits / metrics.todayCalls) * 100 : 0;
+  // TP99 环比昨日：mock 一个 -8% ~ +8% 的对比
+  const tp99Compare = useMemo(() => Number(((Math.random() - 0.5) * 16).toFixed(1)), [metrics.tp99]);
 
   // 跳转日志（toast）
   const jumpToLog = (label: string, params: Record<string, string>) => {
