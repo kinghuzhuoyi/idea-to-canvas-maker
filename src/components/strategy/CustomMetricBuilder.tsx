@@ -41,39 +41,6 @@ interface CustomMetricBuilderProps {
   initial?: CustomMetric;
 }
 
-// 数值快速分箱预设
-const numericQuickBins = [
-  {
-    label: '等距 5 段（0-100）',
-    ranges: [
-      { label: '0-20', min: 0, max: 20 },
-      { label: '20-40', min: 20, max: 40 },
-      { label: '40-60', min: 40, max: 60 },
-      { label: '60-80', min: 60, max: 80 },
-      { label: '80-100', min: 80, max: 100 },
-    ],
-  },
-  {
-    label: '信用分常用（4 段）',
-    ranges: [
-      { label: '<500', max: 500 },
-      { label: '500-650', min: 500, max: 650 },
-      { label: '650-750', min: 650, max: 750 },
-      { label: '≥750', min: 750 },
-    ],
-  },
-  {
-    label: '金额（万）',
-    ranges: [
-      { label: '0-1万', min: 0, max: 10000 },
-      { label: '1-3万', min: 10000, max: 30000 },
-      { label: '3-5万', min: 30000, max: 50000 },
-      { label: '5-10万', min: 50000, max: 100000 },
-      { label: '10万+', min: 100000 },
-    ],
-  },
-];
-
 const chartTypeOptions: {
   value: CustomMetricChartType;
   label: string;
