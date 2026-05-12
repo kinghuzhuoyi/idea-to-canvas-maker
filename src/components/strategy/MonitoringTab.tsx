@@ -19,8 +19,6 @@ import { CustomMetricsModule } from './CustomMetricsModule';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   mockRejectReasons,
-  mockCreditLimitDistribution,
-  mockPricingDistribution,
   mockNodeVerdicts,
   mockRuleHits,
   generateTrendByGranularity,
@@ -29,10 +27,7 @@ import {
   FileCheck,
   CheckCircle2,
   AlertTriangle,
-  CreditCard,
-  Percent,
   Gauge,
-  Target,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
