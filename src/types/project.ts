@@ -115,7 +115,6 @@ export type MonitoringGranularity = 'hour' | 'minute';
 // 监控筛选条件
 export interface MonitoringFilter {
   businessCode: string;       // 业务场景
-  customerTag: string;        // 客户标签 / AB分流种子
   granularity: MonitoringGranularity; // 聚合粒度
 }
 
@@ -129,7 +128,9 @@ export interface OutputField {
   code: string;
   label: string;
   type: OutputFieldType;
-  sample?: string;        // 示例值
+  numberSubtype?: 'integer' | 'decimal';   // 数值子类型
+  description?: string;   // 字段含义描述
+  sample?: string;        // 示例值（已废弃，保留兼容）
 }
 
 // 分箱定义

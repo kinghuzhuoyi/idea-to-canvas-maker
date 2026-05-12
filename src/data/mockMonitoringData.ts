@@ -10,44 +10,41 @@ import {
 
 // 输出字段池（用于自定义指标挑选）
 export const mockOutputFields: OutputField[] = [
-  { code: 'credit_score', label: '信用分', type: 'number', sample: '680' },
-  { code: 'credit_limit', label: '授信额度', type: 'number', sample: '50000' },
-  { code: 'apr', label: '年化利率', type: 'number', sample: '18.5' },
-  { code: 'age', label: '客户年龄', type: 'number', sample: '32' },
-  { code: 'monthly_income', label: '月收入', type: 'number', sample: '8500' },
-  { code: 'debt_ratio', label: '负债率', type: 'number', sample: '0.45' },
-  { code: 'multi_loan_count', label: '多头借贷数', type: 'number', sample: '3' },
-  { code: 'risk_level', label: '风险等级', type: 'string', sample: 'M2' },
-  { code: 'customer_segment', label: '客群分层', type: 'string', sample: 'A1' },
-  { code: 'channel_code', label: '渠道编码', type: 'string', sample: 'CH_001' },
-  { code: 'device_os', label: '设备系统', type: 'string', sample: 'iOS' },
-  { code: 'is_new_user', label: '是否新客', type: 'boolean', sample: 'true' },
-  { code: 'is_vip', label: '是否VIP', type: 'boolean', sample: 'false' },
-  { code: 'has_overdue', label: '是否有逾期', type: 'boolean', sample: 'false' },
-  { code: 'occupation_type', label: '职业类型', type: 'string', sample: '工薪' },
-  { code: 'city_tier', label: '城市等级', type: 'string', sample: 'T1' },
-  { code: 'fpd_score', label: '首逾评分', type: 'number', sample: '720' },
-  { code: 'fraud_score', label: '欺诈评分', type: 'number', sample: '120' },
-  { code: 'product_code', label: '产品编码', type: 'string', sample: 'PROD_A' },
-  { code: 'is_repeat_apply', label: '是否复贷', type: 'boolean', sample: 'true' },
+  { code: 'credit_score', label: '信用分', type: 'number', numberSubtype: 'integer', description: '基于多维度评估的客户综合信用评分（300-850）' },
+  { code: 'credit_limit', label: '授信额度', type: 'number', numberSubtype: 'integer', description: '授予客户的最大可用额度，单位：元' },
+  { code: 'apr', label: '年化利率', type: 'number', numberSubtype: 'decimal', description: '客户实际承担的年化利率，百分比' },
+  { code: 'age', label: '客户年龄', type: 'number', numberSubtype: 'integer', description: '客户当前年龄' },
+  { code: 'monthly_income', label: '月收入', type: 'number', numberSubtype: 'integer', description: '客户申报或核验的月度收入，单位：元' },
+  { code: 'debt_ratio', label: '负债率', type: 'number', numberSubtype: 'decimal', description: '客户当前负债与收入的比值（0~1）' },
+  { code: 'multi_loan_count', label: '多头借贷数', type: 'number', numberSubtype: 'integer', description: '近 90 天内客户在外部机构的借贷申请次数' },
+  { code: 'risk_level', label: '风险等级', type: 'string', description: '客户风险评级，取值 M0~M5' },
+  { code: 'customer_segment', label: '客群分层', type: 'string', description: '基于价值与风险的客户分层标签' },
+  { code: 'channel_code', label: '渠道编码', type: 'string', description: '客户进件来源渠道编码' },
+  { code: 'device_os', label: '设备系统', type: 'string', description: '客户提交申请时使用的设备操作系统' },
+  { code: 'is_new_user', label: '是否新客', type: 'boolean', description: '客户是否首次进件' },
+  { code: 'is_vip', label: '是否VIP', type: 'boolean', description: '客户是否为 VIP 标识' },
+  { code: 'has_overdue', label: '是否有逾期', type: 'boolean', description: '客户历史是否存在逾期记录' },
+  { code: 'occupation_type', label: '职业类型', type: 'string', description: '客户职业大类（工薪/个体/自由职业等）' },
+  { code: 'city_tier', label: '城市等级', type: 'string', description: '客户常驻城市的等级（T1~T5）' },
+  { code: 'fpd_score', label: '首逾评分', type: 'number', numberSubtype: 'integer', description: '首次还款违约概率评分，越高越安全' },
+  { code: 'fraud_score', label: '欺诈评分', type: 'number', numberSubtype: 'decimal', description: '反欺诈模型综合输出分值' },
+  { code: 'product_code', label: '产品编码', type: 'string', description: '客户申请的产品编码' },
+  { code: 'is_repeat_apply', label: '是否复贷', type: 'boolean', description: '客户是否为历史复贷用户' },
 ];
 
-// 业务场景选项
+// 业务场景选项（business_code 列表，可检索）
 export const businessCodeOptions = [
   { value: 'all', label: '全部场景' },
-  { value: 'credit_apply', label: '授信申请' },
-  { value: 'loan_apply', label: '借款申请' },
-  { value: 'withdraw', label: '提现审核' },
-  { value: 'repay', label: '还款检测' },
-];
-
-// 客户标签选项（AB测试分流种子）
-export const customerTagOptions = [
-  { value: 'all', label: '全部客户' },
-  { value: 'seed_a', label: 'A组（种子A）' },
-  { value: 'seed_b', label: 'B组（种子B）' },
-  { value: 'new_user', label: '新客户' },
-  { value: 'vip', label: 'VIP客户' },
+  { value: 'BDSX0001', label: 'BDSX0001 百度授信' },
+  { value: 'BDYX0001', label: 'BDYX0001 百度用信' },
+  { value: 'BDSX0002', label: 'BDSX0002 百度授信续贷' },
+  { value: 'BDYX0002', label: 'BDYX0002 百度用信提现' },
+  { value: 'ALSX0001', label: 'ALSX0001 阿里授信' },
+  { value: 'ALYX0001', label: 'ALYX0001 阿里用信' },
+  { value: 'TXSX0001', label: 'TXSX0001 腾讯授信' },
+  { value: 'TXYX0001', label: 'TXYX0001 腾讯用信' },
+  { value: 'JDSX0001', label: 'JDSX0001 京东授信' },
+  { value: 'JDYX0001', label: 'JDYX0001 京东用信' },
 ];
 
 // 拒绝原因分布
