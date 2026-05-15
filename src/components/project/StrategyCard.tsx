@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Strategy, PublishStatus } from '@/types/project';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Pencil, Trash2, Calendar, Hash, Activity, AlertTriangle, CheckCircle, Clock, Loader2 } from 'lucide-react';
+import { Eye, Pencil, Trash2, Calendar, Hash, Activity, AlertTriangle, CheckCircle, Clock, Loader2, Timer, TrendingUp } from 'lucide-react';
 import { UserRole } from '@/types/project';
 
 interface StrategyCardProps {
