@@ -110,7 +110,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: true,
       projectId: '1',
       publishStatus: 'published',
-      metrics: { todayCalls: 12580, errorRate: 0.12 },
+      metrics: { todayCalls: 12580, errorRate: 0.12, passRate: 98.5, tp99: 45 },
     },
     {
       id: 's2',
@@ -121,7 +121,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: true,
       projectId: '1',
       publishStatus: 'grayscale',
-      metrics: { todayCalls: 8320, errorRate: 0.25 },
+      metrics: { todayCalls: 8320, errorRate: 0.25, passRate: 96.2, tp99: 62 },
     },
     {
       id: 's3',
@@ -132,7 +132,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: false,
       projectId: '1',
       publishStatus: 'approving',
-      metrics: { todayCalls: 0, errorRate: 0 },
+      metrics: { todayCalls: 0, errorRate: 0, passRate: 0, tp99: 0 },
     },
     {
       id: 's4',
@@ -143,7 +143,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: false,
       projectId: '1',
       publishStatus: 'none',
-      metrics: { todayCalls: 0, errorRate: 0 },
+      metrics: { todayCalls: 0, errorRate: 0, passRate: 0, tp99: 0 },
     },
     {
       id: 's13',
@@ -154,7 +154,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: true,
       projectId: '1',
       publishStatus: 'published',
-      metrics: { todayCalls: 5420, errorRate: 0.08 },
+      metrics: { todayCalls: 5420, errorRate: 0.08, passRate: 99.1, tp99: 38 },
     },
     {
       id: 's14',
@@ -165,7 +165,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: true,
       projectId: '1',
       publishStatus: 'published',
-      metrics: { todayCalls: 25800, errorRate: 0.05 },
+      metrics: { todayCalls: 25800, errorRate: 0.05, passRate: 99.5, tp99: 32 },
     },
     {
       id: 's15',
@@ -176,7 +176,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: true,
       projectId: '1',
       publishStatus: 'grayscale',
-      metrics: { todayCalls: 3200, errorRate: 0.32 },
+      metrics: { todayCalls: 3200, errorRate: 0.32, passRate: 94.8, tp99: 78 },
     },
     {
       id: 's16',
@@ -187,7 +187,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: false,
       projectId: '1',
       publishStatus: 'approving',
-      metrics: { todayCalls: 0, errorRate: 0 },
+      metrics: { todayCalls: 0, errorRate: 0, passRate: 0, tp99: 0 },
     },
   ],
   '2': [
@@ -200,7 +200,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: true,
       projectId: '2',
       publishStatus: 'published',
-      metrics: { todayCalls: 45600, errorRate: 0.15 },
+      metrics: { todayCalls: 45600, errorRate: 0.15, passRate: 97.8, tp99: 55 },
     },
     {
       id: 's6',
@@ -211,7 +211,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: true,
       projectId: '2',
       publishStatus: 'grayscale',
-      metrics: { todayCalls: 18200, errorRate: 0.08 },
+      metrics: { todayCalls: 18200, errorRate: 0.08, passRate: 99.0, tp99: 42 },
     },
   ],
   '3': [
@@ -224,7 +224,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: true,
       projectId: '3',
       publishStatus: 'published',
-      metrics: { todayCalls: 3200, errorRate: 0.02 },
+      metrics: { todayCalls: 3200, errorRate: 0.02, passRate: 99.8, tp99: 28 },
     },
   ],
   '4': [
@@ -237,7 +237,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: true,
       projectId: '4',
       publishStatus: 'published',
-      metrics: { todayCalls: 1580, errorRate: 0.18 },
+      metrics: { todayCalls: 1580, errorRate: 0.18, passRate: 97.5, tp99: 58 },
     },
     {
       id: 's9',
@@ -248,7 +248,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: true,
       projectId: '4',
       publishStatus: 'approving',
-      metrics: { todayCalls: 0, errorRate: 0 },
+      metrics: { todayCalls: 0, errorRate: 0, passRate: 0, tp99: 0 },
     },
   ],
   '5': [
@@ -261,7 +261,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: true,
       projectId: '5',
       publishStatus: 'published',
-      metrics: { todayCalls: 520, errorRate: 0.05 },
+      metrics: { todayCalls: 520, errorRate: 0.05, passRate: 99.2, tp99: 35 },
     },
   ],
   '8': [
@@ -274,7 +274,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: true,
       projectId: '8',
       publishStatus: 'published',
-      metrics: { todayCalls: 8900, errorRate: 0.22 },
+      metrics: { todayCalls: 8900, errorRate: 0.22, passRate: 96.8, tp99: 65 },
     },
     {
       id: 's12',
@@ -285,7 +285,7 @@ export const mockStrategies: Record<string, Strategy[]> = {
       referenced: false,
       projectId: '8',
       publishStatus: 'none',
-      metrics: { todayCalls: 0, errorRate: 0 },
+      metrics: { todayCalls: 0, errorRate: 0, passRate: 0, tp99: 0 },
     },
   ],
 };

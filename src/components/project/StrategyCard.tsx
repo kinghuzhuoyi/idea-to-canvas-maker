@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Strategy, PublishStatus } from '@/types/project';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Pencil, Trash2, Calendar, Hash, Activity, AlertTriangle, CheckCircle, Clock, Loader2 } from 'lucide-react';
+import { Eye, Pencil, Trash2, Calendar, Hash, Activity, AlertTriangle, CheckCircle, Clock, Loader2, Timer, TrendingUp } from 'lucide-react';
 import { UserRole } from '@/types/project';
 
 interface StrategyCardProps {
@@ -77,7 +77,7 @@ export function StrategyCard({ strategy, userRole, onView, onEdit, onDelete }: S
 
       {/* 指标数据展示 - 固定高度区域 */}
       <div className="flex-1 flex flex-col justify-end">
-        <div className="flex items-center gap-4 py-3 border-t border-b border-border/50 mb-3 min-h-[52px]">
+        <div className="grid grid-cols-2 gap-3 py-3 border-t border-b border-border/50 mb-3 min-h-[52px]">
           {hasMetrics ? (
             <>
               <div className="flex items-center gap-2">
@@ -85,6 +85,15 @@ export function StrategyCard({ strategy, userRole, onView, onEdit, onDelete }: S
                 <div className="text-sm">
                   <span className="text-muted-foreground">今日调用</span>
                   <span className="ml-1.5 font-medium text-foreground">{formatNumber(strategy.metrics.todayCalls)}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <TrendingUp className={`h-4 w-4 ${strategy.metrics.passRate && strategy.metrics.passRate >= 98 ? 'text-emerald-500' : 'text-muted-foreground'}`} />
+                <div className="text-sm">
+                  <span className="text-muted-foreground">通过率</span>
+                  <span className={`ml-1.5 font-medium ${strategy.metrics.passRate && strategy.metrics.passRate >= 98 ? 'text-emerald-600' : 'text-foreground'}`}>
+                    {strategy.metrics.passRate?.toFixed(1) ?? '--'}%
+                  </span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -96,9 +105,18 @@ export function StrategyCard({ strategy, userRole, onView, onEdit, onDelete }: S
                   </span>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <Timer className={`h-4 w-4 ${strategy.metrics.tp99 && strategy.metrics.tp99 <= 50 ? 'text-emerald-500' : 'text-muted-foreground'}`} />
+                <div className="text-sm">
+                  <span className="text-muted-foreground">TP99</span>
+                  <span className={`ml-1.5 font-medium ${strategy.metrics.tp99 && strategy.metrics.tp99 <= 50 ? 'text-emerald-600' : 'text-foreground'}`}>
+                    {strategy.metrics.tp99 ? `${strategy.metrics.tp99}ms` : '--'}
+                  </span>
+                </div>
+              </div>
             </>
           ) : (
-            <div className="text-sm text-muted-foreground">暂无调用数据</div>
+            <div className="text-sm text-muted-foreground col-span-2">暂无调用数据</div>
           )}
         </div>
 
