@@ -29,6 +29,8 @@ export type PublishStatus = 'none' | 'approving' | 'grayscale' | 'published';
 export interface StrategyMetrics {
   todayCalls: number;
   errorRate: number; // 百分比，例如 0.5 表示 0.5%
+  passRate?: number; // 通过率 %，例如 98.5 表示 98.5%
+  tp99?: number;     // TP99 耗时 ms
 }
 
 export interface Strategy {
