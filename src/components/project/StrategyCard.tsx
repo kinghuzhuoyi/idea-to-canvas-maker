@@ -77,46 +77,46 @@ export function StrategyCard({ strategy, userRole, onView, onEdit, onDelete }: S
 
       {/* 指标数据展示 - 固定高度区域 */}
       <div className="flex-1 flex flex-col justify-end">
-        <div className="grid grid-cols-2 gap-3 py-3 border-t border-b border-border/50 mb-3 min-h-[52px]">
+        <div className="flex items-center gap-3 py-3 border-t border-b border-border/50 mb-3 min-h-[52px]">
           {hasMetrics ? (
             <>
-              <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4 text-primary" />
-                <div className="text-sm">
+              <div className="flex items-center gap-1.5">
+                <Activity className="h-3.5 w-3.5 text-primary" />
+                <div className="text-xs">
                   <span className="text-muted-foreground">今日调用</span>
-                  <span className="ml-1.5 font-medium text-foreground">{formatNumber(strategy.metrics.todayCalls)}</span>
+                  <span className="ml-1 font-medium text-foreground">{formatNumber(strategy.metrics.todayCalls)}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className={`h-4 w-4 ${strategy.metrics.passRate && strategy.metrics.passRate >= 98 ? 'text-emerald-500' : 'text-muted-foreground'}`} />
-                <div className="text-sm">
+              <div className="flex items-center gap-1.5">
+                <TrendingUp className={`h-3.5 w-3.5 ${strategy.metrics.passRate && strategy.metrics.passRate >= 98 ? 'text-emerald-500' : 'text-muted-foreground'}`} />
+                <div className="text-xs">
                   <span className="text-muted-foreground">通过率</span>
-                  <span className={`ml-1.5 font-medium ${strategy.metrics.passRate && strategy.metrics.passRate >= 98 ? 'text-emerald-600' : 'text-foreground'}`}>
+                  <span className={`ml-1 font-medium ${strategy.metrics.passRate && strategy.metrics.passRate >= 98 ? 'text-emerald-600' : 'text-foreground'}`}>
                     {strategy.metrics.passRate?.toFixed(1) ?? '--'}%
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <AlertTriangle className={`h-4 w-4 ${strategy.metrics.errorRate > 0.2 ? 'text-destructive' : 'text-muted-foreground'}`} />
-                <div className="text-sm">
+              <div className="flex items-center gap-1.5">
+                <AlertTriangle className={`h-3.5 w-3.5 ${strategy.metrics.errorRate > 0.2 ? 'text-destructive' : 'text-muted-foreground'}`} />
+                <div className="text-xs">
                   <span className="text-muted-foreground">异常率</span>
-                  <span className={`ml-1.5 font-medium ${strategy.metrics.errorRate > 0.2 ? 'text-destructive' : 'text-foreground'}`}>
+                  <span className={`ml-1 font-medium ${strategy.metrics.errorRate > 0.2 ? 'text-destructive' : 'text-foreground'}`}>
                     {strategy.metrics.errorRate.toFixed(2)}%
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Timer className={`h-4 w-4 ${strategy.metrics.tp99 && strategy.metrics.tp99 <= 50 ? 'text-emerald-500' : 'text-muted-foreground'}`} />
-                <div className="text-sm">
+              <div className="flex items-center gap-1.5">
+                <Timer className={`h-3.5 w-3.5 ${strategy.metrics.tp99 && strategy.metrics.tp99 <= 50 ? 'text-emerald-500' : 'text-muted-foreground'}`} />
+                <div className="text-xs">
                   <span className="text-muted-foreground">TP99</span>
-                  <span className={`ml-1.5 font-medium ${strategy.metrics.tp99 && strategy.metrics.tp99 <= 50 ? 'text-emerald-600' : 'text-foreground'}`}>
+                  <span className={`ml-1 font-medium ${strategy.metrics.tp99 && strategy.metrics.tp99 <= 50 ? 'text-emerald-600' : 'text-foreground'}`}>
                     {strategy.metrics.tp99 ? `${strategy.metrics.tp99}ms` : '--'}
                   </span>
                 </div>
               </div>
             </>
           ) : (
-            <div className="text-sm text-muted-foreground col-span-2">暂无调用数据</div>
+            <div className="text-xs text-muted-foreground">暂无调用数据</div>
           )}
         </div>
 
