@@ -107,7 +107,7 @@ export function CustomMetricCard({ metric, onEdit, onDelete }: CustomMetricCardP
           <div className="h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={data} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={2}>
+                <Pie data={data} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={2}>
                   {data.map((_, i) => (
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                   ))}
@@ -119,7 +119,13 @@ export function CustomMetricCard({ metric, onEdit, onDelete }: CustomMetricCardP
                     name,
                   ]}
                 />
-                <Legend wrapperStyle={{ fontSize: '11px' }} />
+                <Legend
+                  wrapperStyle={{ fontSize: '11px' }}
+                  layout="vertical"
+                  align="right"
+                  verticalAlign="middle"
+                  height={200}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
