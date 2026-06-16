@@ -155,13 +155,21 @@ export function CustomMetricCard({ metric, onEdit, onDelete }: CustomMetricCardP
         )}
 
         {metric.chartType === 'trendBar' && (
-          <ResponsiveContainer width="100%" height={240}>
+          <ResponsiveContainer width="100%" height={260}>
             <BarChart data={trendData} margin={{ top: 5, right: 16, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
               <XAxis dataKey="time" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" interval={2} />
               <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" axisLine={false} />
               <Tooltip cursor={{ fill: 'hsl(var(--muted) / 0.5)' }} contentStyle={tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: '11px' }} />
+              <Legend
+                wrapperStyle={{
+                  fontSize: '11px',
+                  maxHeight: labels.length > 8 ? '48px' : '24px',
+                  overflowY: labels.length > 8 ? 'auto' : 'visible',
+                  paddingRight: '4px',
+                }}
+                iconSize={8}
+              />
               {labels.map((label, i) => (
                 <Bar key={label} dataKey={label} stackId="a" fill={CHART_COLORS[i % CHART_COLORS.length]} />
               ))}
