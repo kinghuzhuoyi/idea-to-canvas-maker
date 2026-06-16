@@ -296,7 +296,7 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
                           <Input
                             type="number"
                             min={1}
-                            max={50}
+                            max={20}
                             value={quickCount}
                             onChange={(e) => setQuickCount(e.target.value)}
                             className="h-8"
@@ -306,14 +306,20 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
                           生成
                         </Button>
                       </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        将 [开始, 结束) 平均切分为指定箱数{field.numberSubtype === 'integer' ? '（整数取整）' : ''}
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                        <Info className="h-3 w-3" />
+                        将 [开始, 结束) 平均切分为指定箱数，最多 20 个{field.numberSubtype === 'integer' ? '（整数取整）' : ''}
                       </p>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <Label className="text-sm">分箱区间</Label>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-sm">分箱区间</Label>
+                          <span className="text-[11px] text-muted-foreground">
+                            {(bins.ranges ?? []).length}/20
+                          </span>
+                        </div>
                         <Button type="button" variant="ghost" size="sm" onClick={addRange} className="h-7">
                           <Plus className="h-3.5 w-3.5 mr-1" />添加区间
                         </Button>
