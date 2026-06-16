@@ -30,7 +30,7 @@ import {
   CustomMetricChartType,
 } from '@/types/project';
 import { mockOutputFields } from '@/data/mockMonitoringData';
-import { Plus, Trash2, Search, PieChart as PieIcon, BarChart3, Activity, Zap } from 'lucide-react';
+import { Plus, Trash2, Search, PieChart as PieIcon, BarChart3, Activity, Zap, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -131,8 +131,8 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
       toast.error('请输入有效的开始、结束、箱数');
       return;
     }
-    if (end <= start || count < 1 || count > 50) {
-      toast.error('结束值需大于开始值，箱数需在 1~50 之间');
+    if (end <= start || count < 1 || count > 20) {
+      toast.error('结束值需大于开始值，箱数需在 1~20 之间');
       return;
     }
     const stepVal = (end - start) / count;
@@ -153,7 +153,14 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
     ranges[idx] = { ...ranges[idx], ...patch } as any;
     setBins({ ranges });
   };
-  const addRange = () => setBins({ ranges: [...(bins.ranges ?? []), { label: `区间${(bins.ranges?.length ?? 0) + 1}` }] });
+  const addRange = () => {
+    const current = bins.ranges ?? [];
+    if (current.length >= 20) {
+      toast.error('最多支持 20 个分箱');
+      return;
+    }
+    setBins({ ranges: [...current, { label: `区间${current.length + 1}` }] });
+  };
   const removeRange = (idx: number) =>
     setBins({ ranges: (bins.ranges ?? []).filter((_, i) => i !== idx) });
 
