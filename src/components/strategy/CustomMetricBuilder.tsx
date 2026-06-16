@@ -30,7 +30,7 @@ import {
   CustomMetricChartType,
 } from '@/types/project';
 import { mockOutputFields } from '@/data/mockMonitoringData';
-import { Plus, Trash2, Search, PieChart as PieIcon, BarChart3, Activity, Zap } from 'lucide-react';
+import { Plus, Trash2, Search, PieChart as PieIcon, BarChart3, Activity, Zap, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -131,8 +131,8 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
       toast.error('请输入有效的开始、结束、箱数');
       return;
     }
-    if (end <= start || count < 1 || count > 50) {
-      toast.error('结束值需大于开始值，箱数需在 1~50 之间');
+    if (end <= start || count < 1 || count > 20) {
+      toast.error('结束值需大于开始值，箱数需在 1~20 之间');
       return;
     }
     const stepVal = (end - start) / count;
@@ -153,7 +153,14 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
     ranges[idx] = { ...ranges[idx], ...patch } as any;
     setBins({ ranges });
   };
-  const addRange = () => setBins({ ranges: [...(bins.ranges ?? []), { label: `区间${(bins.ranges?.length ?? 0) + 1}` }] });
+  const addRange = () => {
+    const current = bins.ranges ?? [];
+    if (current.length >= 20) {
+      toast.error('最多支持 20 个分箱');
+      return;
+    }
+    setBins({ ranges: [...current, { label: `区间${current.length + 1}` }] });
+  };
   const removeRange = (idx: number) =>
     setBins({ ranges: (bins.ranges ?? []).filter((_, i) => i !== idx) });
 
@@ -289,7 +296,7 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
                           <Input
                             type="number"
                             min={1}
-                            max={50}
+                            max={20}
                             value={quickCount}
                             onChange={(e) => setQuickCount(e.target.value)}
                             className="h-8"
@@ -299,14 +306,20 @@ export function CustomMetricBuilder({ open, onOpenChange, onSave, initial }: Cus
                           生成
                         </Button>
                       </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        将 [开始, 结束) 平均切分为指定箱数{field.numberSubtype === 'integer' ? '（整数取整）' : ''}
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                        <Info className="h-3 w-3" />
+                        将 [开始, 结束) 平均切分为指定箱数，最多 20 个{field.numberSubtype === 'integer' ? '（整数取整）' : ''}
                       </p>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <Label className="text-sm">分箱区间</Label>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-sm">分箱区间</Label>
+                          <span className="text-[11px] text-muted-foreground">
+                            {(bins.ranges ?? []).length}/20
+                          </span>
+                        </div>
                         <Button type="button" variant="ghost" size="sm" onClick={addRange} className="h-7">
                           <Plus className="h-3.5 w-3.5 mr-1" />添加区间
                         </Button>

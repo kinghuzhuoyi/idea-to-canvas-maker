@@ -107,7 +107,7 @@ export function CustomMetricCard({ metric, onEdit, onDelete }: CustomMetricCardP
           <div className="h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={data} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={2}>
+                <Pie data={data} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={2}>
                   {data.map((_, i) => (
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                   ))}
@@ -119,7 +119,13 @@ export function CustomMetricCard({ metric, onEdit, onDelete }: CustomMetricCardP
                     name,
                   ]}
                 />
-                <Legend wrapperStyle={{ fontSize: '11px' }} />
+                <Legend
+                  wrapperStyle={{ fontSize: '11px' }}
+                  layout="vertical"
+                  align="right"
+                  verticalAlign="middle"
+                  height={200}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -133,9 +139,10 @@ export function CustomMetricCard({ metric, onEdit, onDelete }: CustomMetricCardP
               <YAxis
                 type="category"
                 dataKey="name"
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 10 }}
                 stroke="hsl(var(--muted-foreground))"
-                width={80}
+                width={labels.length > 10 ? 120 : 90}
+                interval={0}
               />
               <Tooltip cursor={{ fill: 'hsl(var(--muted) / 0.5)' }} contentStyle={tooltipStyle} />
               <Bar dataKey="value" radius={[0, 6, 6, 0]}>
@@ -148,13 +155,21 @@ export function CustomMetricCard({ metric, onEdit, onDelete }: CustomMetricCardP
         )}
 
         {metric.chartType === 'trendBar' && (
-          <ResponsiveContainer width="100%" height={240}>
+          <ResponsiveContainer width="100%" height={260}>
             <BarChart data={trendData} margin={{ top: 5, right: 16, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
               <XAxis dataKey="time" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" interval={2} />
               <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" axisLine={false} />
               <Tooltip cursor={{ fill: 'hsl(var(--muted) / 0.5)' }} contentStyle={tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: '11px' }} />
+              <Legend
+                wrapperStyle={{
+                  fontSize: '11px',
+                  maxHeight: labels.length > 8 ? '48px' : '24px',
+                  overflowY: labels.length > 8 ? 'auto' : 'visible',
+                  paddingRight: '4px',
+                }}
+                iconSize={8}
+              />
               {labels.map((label, i) => (
                 <Bar key={label} dataKey={label} stackId="a" fill={CHART_COLORS[i % CHART_COLORS.length]} />
               ))}
