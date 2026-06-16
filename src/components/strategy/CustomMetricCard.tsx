@@ -139,9 +139,10 @@ export function CustomMetricCard({ metric, onEdit, onDelete }: CustomMetricCardP
               <YAxis
                 type="category"
                 dataKey="name"
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 10 }}
                 stroke="hsl(var(--muted-foreground))"
-                width={80}
+                width={labels.length > 10 ? 120 : 90}
+                interval={0}
               />
               <Tooltip cursor={{ fill: 'hsl(var(--muted) / 0.5)' }} contentStyle={tooltipStyle} />
               <Bar dataKey="value" radius={[0, 6, 6, 0]}>
