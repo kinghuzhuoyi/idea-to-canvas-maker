@@ -35,6 +35,7 @@ import {
   Percent,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ReleasePipeline } from './ReleasePipeline';
 
 interface VersionTabProps {
   versions: StrategyVersion[];
@@ -345,119 +346,32 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
         </DialogContent>
       </Dialog>
 
-      {/* 发布版本弹窗 - Enhanced */}
       <Dialog open={modalType === 'publish'} onOpenChange={() => { setModalType(null); resetForms(); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>发布版本</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Rocket className="h-5 w-5 text-primary" />
+              发布流水线
+            </DialogTitle>
             <DialogDescription>
-              发布版本 {selectedVersion?.versionNumber}，请选择发布方式。
+              发布版本 {selectedVersion?.versionNumber}，请按流程从左至右完成各模块校验。
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-6 py-4">
-            {/* Pre-publish checklist */}
-            <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-              <h4 className="text-sm font-medium flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                发布前检查
-              </h4>
-              <div className="text-sm text-muted-foreground space-y-1">
-                <p className="flex items-center gap-2">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-500" /> 规则配置完整
-                </p>
-                <p className="flex items-center gap-2">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-500" /> 单笔测试通过
-                </p>
-                <p className="flex items-center gap-2">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-500" /> 批量测试通过
-                </p>
-              </div>
-            </div>
-
-            {/* Publish type selection */}
-            <div className="space-y-3">
-              <Label>发布方式</Label>
-              <RadioGroup value={publishType} onValueChange={(v) => setPublishType(v as PublishType)}>
-                <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                  <RadioGroupItem value="direct" id="direct" className="mt-1" />
-                  <div className="space-y-1">
-                    <Label htmlFor="direct" className="cursor-pointer flex items-center gap-2">
-                      <Rocket className="h-4 w-4 text-primary" />
-                      直接发布
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      审批通过后立即全量生效
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                  <RadioGroupItem value="grayscale" id="grayscale" className="mt-1" />
-                  <div className="space-y-1">
-                    <Label htmlFor="grayscale" className="cursor-pointer flex items-center gap-2">
-                      <Percent className="h-4 w-4 text-emerald-500" />
-                      灰度发布
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      审批通过后先按比例灰度，观察指标后再全量
-                    </p>
-                  </div>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Initial traffic ratio for grayscale */}
-            {publishType === 'grayscale' && (
-              <div className="space-y-3 p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                <div className="flex items-center justify-between">
-                  <Label>初始灰度流量</Label>
-                  <span className="text-lg font-semibold text-emerald-500">{initialTrafficRatio[0]}%</span>
-                </div>
-                <Slider
-                  value={initialTrafficRatio}
-                  onValueChange={setInitialTrafficRatio}
-                  max={100}
-                  step={5}
-                  className="w-full"
-                />
-                <div className="flex gap-2">
-                  {trafficPresets.map(preset => (
-                    <Button
-                      key={preset}
-                      variant={initialTrafficRatio[0] === preset ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setInitialTrafficRatio([preset])}
-                    >
-                      {preset}%
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Publish note */}
-            <div className="space-y-2">
-              <Label htmlFor="publishNote">变更说明（可选）</Label>
-              <Textarea
-                id="publishNote"
-                placeholder="描述本次发布的变更内容..."
-                value={publishNote}
-                onChange={(e) => setPublishNote(e.target.value)}
-                rows={2}
-              />
-            </div>
-
-            {/* Impact notice */}
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 text-amber-700 text-sm">
-              <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <p>发布后将进入审批流程，预计影响今日 {effectiveVersion ? '12,580' : '0'} 笔订单。</p>
-            </div>
+          <div className="py-2">
+            <ReleasePipeline
+              versionNumber={selectedVersion?.versionNumber}
+              onGrayscalePublish={() => {
+                setTimeout(() => {
+                  setModalType(null);
+                  setSelectedVersion(null);
+                  resetForms();
+                }, 800);
+              }}
+            />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setModalType(null); resetForms(); }}>
-              取消
-            </Button>
-            <Button onClick={handlePublish}>
-              {publishType === 'grayscale' ? '提交灰度发布' : '提交发布'}
+              关闭
             </Button>
           </DialogFooter>
         </DialogContent>
