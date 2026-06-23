@@ -35,6 +35,7 @@ import {
   Percent,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ReleasePipeline } from './ReleasePipeline';
 
 interface VersionTabProps {
   versions: StrategyVersion[];
