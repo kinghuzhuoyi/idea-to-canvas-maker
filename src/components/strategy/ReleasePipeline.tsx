@@ -136,15 +136,26 @@ const initialStages = (): PipelineStage[] => [
     name: '发布',
     units: [
       {
+        id: 'approval',
+        name: '发布审批',
+        kind: 'manual',
+        status: 'pending',
+        manualLabel: '提交审批',
+        hasDetail: true,
+      },
+      {
         id: 'grayscale',
         name: '灰度发布',
         kind: 'manual',
         status: 'pending',
         manualLabel: '灰度发布',
+        hasDetail: true,
       },
     ],
   },
 ];
+
+export const createInitialPipeline = initialStages;
 
 const statusBadge = (status: UnitStatus) => {
   switch (status) {
