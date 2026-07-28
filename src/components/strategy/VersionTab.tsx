@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { StrategyVersion, UserRole } from '@/types/project';
+import { useState, useMemo } from 'react';
+import { StrategyVersion, UserRole, VersionStatus } from '@/types/project';
 import { VersionTable } from './VersionTable';
 import { VersionStatusCards } from './VersionStatusCards';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,7 @@ import {
   Percent,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { ReleasePipeline } from './ReleasePipeline';
+import { ReleasePipeline, createInitialPipeline, PipelineStage } from './ReleasePipeline';
 
 interface VersionTabProps {
   versions: StrategyVersion[];
@@ -316,10 +316,7 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
           <VersionTable
             versions={versions}
             userRole={userRole}
-            onPublish={(v) => {
-              setSelectedVersion(v);
-              setModalType('publish');
-            }}
+            onPublish={(v) => openPipeline(v)}
             onCopy={handleCopy}
             onRollback={(v) => {
               setSelectedVersion(v);
@@ -416,7 +413,7 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={modalType === 'publish'} onOpenChange={() => { setModalType(null); resetForms(); }}>
+      <Dialog open={modalType === 'publish'} onOpenChange={(o) => { if (!o) closePipeline(); }}>
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -428,19 +425,22 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">
-            <ReleasePipeline
-              versionNumber={selectedVersion?.versionNumber}
-              onGrayscalePublish={() => {
-                setTimeout(() => {
-                  setModalType(null);
-                  setSelectedVersion(null);
-                  resetForms();
-                }, 800);
-              }}
-            />
+            {selectedVersion && (
+              <ReleasePipeline
+                versionNumber={selectedVersion.versionNumber}
+                stages={pipelines[selectedVersion.id] ?? []}
+                onStagesChange={(next) =>
+                  setPipelines((prev) => ({ ...prev, [selectedVersion.id]: next }))
+                }
+                grayscaleRatio={grayscaleRatios[selectedVersion.id] ?? 10}
+                onGrayscaleRatioChange={(r) =>
+                  setGrayscaleRatios((prev) => ({ ...prev, [selectedVersion.id]: r }))
+                }
+              />
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setModalType(null); resetForms(); }}>
+            <Button variant="outline" onClick={closePipeline}>
               关闭
             </Button>
           </DialogFooter>
