@@ -189,10 +189,18 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
   };
 
   const handleRefreshApproval = (version: StrategyVersion) => {
+    if (pipelines[version.id]) {
+      openPipeline(version);
+      return;
+    }
     toast.success(`版本 ${version.versionNumber} 审批状态已刷新`);
   };
 
   const handleRefreshGrayscale = (version: StrategyVersion) => {
+    if (pipelines[version.id]) {
+      openPipeline(version);
+      return;
+    }
     toast.success(`版本 ${version.versionNumber} 灰度状态已刷新`);
   };
 
@@ -203,7 +211,7 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
     <div className="space-y-6">
       {/* Version Status Cards */}
       <VersionStatusCards
-        versions={versions}
+        versions={displayVersions}
         userRole={userRole}
         onRefreshApproval={handleRefreshApproval}
         onTerminateApproval={(v) => {
@@ -212,11 +220,19 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
         }}
         onRefreshGrayscale={handleRefreshGrayscale}
         onAdjustTraffic={(v) => {
+          if (pipelines[v.id]) {
+            openPipeline(v);
+            return;
+          }
           setSelectedVersion(v);
           setTrafficRatio([v.grayscaleInfo?.trafficRatio || 20]);
           setModalType('adjustTraffic');
         }}
         onFullPublish={(v) => {
+          if (pipelines[v.id]) {
+            openPipeline(v);
+            return;
+          }
           setSelectedVersion(v);
           setModalType('fullPublish');
         }}
@@ -225,6 +241,7 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
           setModalType('rollbackGrayscale');
         }}
       />
+
 
       {/* Version List Table */}
       <Card>
