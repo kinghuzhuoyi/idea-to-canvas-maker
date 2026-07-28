@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
 import {
   CheckCircle2,
   XCircle,
@@ -51,6 +52,12 @@ export interface PipelineStage {
 
 interface ReleasePipelineProps {
   versionNumber?: string;
+  /** Controlled pipeline state */
+  stages: PipelineStage[];
+  onStagesChange: (stages: PipelineStage[]) => void;
+  /** Grayscale traffic ratio (controlled) */
+  grayscaleRatio?: number;
+  onGrayscaleRatioChange?: (ratio: number) => void;
   /** Called when the final 灰度发布 button is clicked */
   onGrayscalePublish?: () => void;
 }
@@ -130,15 +137,26 @@ const initialStages = (): PipelineStage[] => [
     name: '发布',
     units: [
       {
+        id: 'approval',
+        name: '发布审批',
+        kind: 'manual',
+        status: 'pending',
+        manualLabel: '提交审批',
+        hasDetail: true,
+      },
+      {
         id: 'grayscale',
         name: '灰度发布',
         kind: 'manual',
         status: 'pending',
         manualLabel: '灰度发布',
+        hasDetail: true,
       },
     ],
   },
 ];
+
+export const createInitialPipeline = initialStages;
 
 const statusBadge = (status: UnitStatus) => {
   switch (status) {
@@ -180,8 +198,16 @@ const statusBadge = (status: UnitStatus) => {
   }
 };
 
-export function ReleasePipeline({ versionNumber, onGrayscalePublish }: ReleasePipelineProps) {
-  const [stages, setStages] = useState<PipelineStage[]>(initialStages());
+export function ReleasePipeline({
+  versionNumber,
+  stages,
+  onStagesChange,
+  grayscaleRatio = 10,
+  onGrayscaleRatioChange,
+  onGrayscalePublish,
+}: ReleasePipelineProps) {
+  const setStages = (updater: (prev: PipelineStage[]) => PipelineStage[]) =>
+    onStagesChange(updater(stages));
 
   // helper – flatten units in execution order
   const orderedUnits = useMemo(
@@ -209,14 +235,33 @@ export function ReleasePipeline({ versionNumber, onGrayscalePublish }: ReleasePi
   };
 
   const handleManualConfirm = (stageId: string, unit: PipelineUnit) => {
+    if (unit.id === 'approval') {
+      updateUnit(stageId, unit.id, {
+        status: 'running',
+        feedback: '审批流程进行中，审批人：风控管理员',
+        feedbackType: 'info',
+        log: { time: now(), operator: '胡卓亦', result: '提交审批', resultType: 'success' },
+      });
+      toast.success(`版本 ${versionNumber ?? ''} 已提交发布审批`);
+      // 模拟审批通过
+      setTimeout(() => {
+        updateUnit(stageId, unit.id, {
+          status: 'passed',
+          feedback: '审批通过',
+          feedbackType: 'success',
+          log: { time: now(), operator: '风控管理员', result: '审批通过', resultType: 'success' },
+        });
+      }, 2000);
+      return;
+    }
     if (unit.id === 'grayscale') {
       updateUnit(stageId, unit.id, {
-        status: 'passed',
-        feedback: '已提交灰度发布',
-        feedbackType: 'success',
-        log: { time: now(), operator: '胡卓亦', result: '已发布', resultType: 'success' },
+        status: 'running',
+        feedback: `灰度中，当前流量比例 ${grayscaleRatio}%`,
+        feedbackType: 'info',
+        log: { time: now(), operator: '胡卓亦', result: '已发布灰度', resultType: 'success' },
       });
-      toast.success(`版本 ${versionNumber ?? ''} 已提交灰度发布`);
+      toast.success(`版本 ${versionNumber ?? ''} 已进入灰度，流量 ${grayscaleRatio}%`);
       onGrayscalePublish?.();
       return;
     }
@@ -226,6 +271,7 @@ export function ReleasePipeline({ versionNumber, onGrayscalePublish }: ReleasePi
     });
     toast.success(`${unit.name} 已确认`);
   };
+
 
   const handleRefresh = (stageId: string, unit: PipelineUnit) => {
     updateUnit(stageId, unit.id, {
@@ -366,6 +412,48 @@ export function ReleasePipeline({ versionNumber, onGrayscalePublish }: ReleasePi
                   {isPending && unit.testable && (
                     <div className="text-xs rounded-md px-2.5 py-2 bg-muted/60 text-muted-foreground">
                       未进行{unit.name}
+                    </div>
+                  )}
+
+                  {/* 灰度比例调节 */}
+                  {unit.id === 'grayscale' && (unit.status === 'awaiting' || unit.status === 'running') && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">灰度比例</span>
+                        <span className="font-medium">{grayscaleRatio}%</span>
+                      </div>
+                      <Slider
+                        value={[grayscaleRatio]}
+                        min={1}
+                        max={100}
+                        step={1}
+                        onValueChange={(v) => onGrayscaleRatioChange?.(v[0])}
+                      />
+                    </div>
+                  )}
+
+                  {/* 灰度运行中的操作 */}
+                  {unit.id === 'grayscale' && unit.status === 'running' && (
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleViewDetail(unit)}>
+                        <Eye className="h-3 w-3 mr-1" />
+                        查看详情
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => {
+                          updateUnit(stage.id, unit.id, {
+                            status: 'passed',
+                            feedback: '已全量发布',
+                            feedbackType: 'success',
+                            log: { time: now(), operator: '胡卓亦', result: '全量发布', resultType: 'success' },
+                          });
+                          toast.success(`版本 ${versionNumber ?? ''} 已全量发布`);
+                        }}
+                      >
+                        全量发布
+                      </Button>
                     </div>
                   )}
 
