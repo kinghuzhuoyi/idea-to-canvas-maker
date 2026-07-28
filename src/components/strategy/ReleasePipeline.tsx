@@ -197,8 +197,16 @@ const statusBadge = (status: UnitStatus) => {
   }
 };
 
-export function ReleasePipeline({ versionNumber, onGrayscalePublish }: ReleasePipelineProps) {
-  const [stages, setStages] = useState<PipelineStage[]>(initialStages());
+export function ReleasePipeline({
+  versionNumber,
+  stages,
+  onStagesChange,
+  grayscaleRatio = 10,
+  onGrayscaleRatioChange,
+  onGrayscalePublish,
+}: ReleasePipelineProps) {
+  const setStages = (updater: (prev: PipelineStage[]) => PipelineStage[]) =>
+    onStagesChange(updater(stages));
 
   // helper – flatten units in execution order
   const orderedUnits = useMemo(
@@ -226,14 +234,33 @@ export function ReleasePipeline({ versionNumber, onGrayscalePublish }: ReleasePi
   };
 
   const handleManualConfirm = (stageId: string, unit: PipelineUnit) => {
+    if (unit.id === 'approval') {
+      updateUnit(stageId, unit.id, {
+        status: 'running',
+        feedback: '审批流程进行中，审批人：风控管理员',
+        feedbackType: 'info',
+        log: { time: now(), operator: '胡卓亦', result: '提交审批', resultType: 'success' },
+      });
+      toast.success(`版本 ${versionNumber ?? ''} 已提交发布审批`);
+      // 模拟审批通过
+      setTimeout(() => {
+        updateUnit(stageId, unit.id, {
+          status: 'passed',
+          feedback: '审批通过',
+          feedbackType: 'success',
+          log: { time: now(), operator: '风控管理员', result: '审批通过', resultType: 'success' },
+        });
+      }, 2000);
+      return;
+    }
     if (unit.id === 'grayscale') {
       updateUnit(stageId, unit.id, {
-        status: 'passed',
-        feedback: '已提交灰度发布',
-        feedbackType: 'success',
-        log: { time: now(), operator: '胡卓亦', result: '已发布', resultType: 'success' },
+        status: 'running',
+        feedback: `灰度中，当前流量比例 ${grayscaleRatio}%`,
+        feedbackType: 'info',
+        log: { time: now(), operator: '胡卓亦', result: '已发布灰度', resultType: 'success' },
       });
-      toast.success(`版本 ${versionNumber ?? ''} 已提交灰度发布`);
+      toast.success(`版本 ${versionNumber ?? ''} 已进入灰度，流量 ${grayscaleRatio}%`);
       onGrayscalePublish?.();
       return;
     }
@@ -243,6 +270,7 @@ export function ReleasePipeline({ versionNumber, onGrayscalePublish }: ReleasePi
     });
     toast.success(`${unit.name} 已确认`);
   };
+
 
   const handleRefresh = (stageId: string, unit: PipelineUnit) => {
     updateUnit(stageId, unit.id, {
