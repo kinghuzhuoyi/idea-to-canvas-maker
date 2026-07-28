@@ -414,6 +414,48 @@ export function ReleasePipeline({
                     </div>
                   )}
 
+                  {/* 灰度比例调节 */}
+                  {unit.id === 'grayscale' && (unit.status === 'awaiting' || unit.status === 'running') && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">灰度比例</span>
+                        <span className="font-medium">{grayscaleRatio}%</span>
+                      </div>
+                      <Slider
+                        value={[grayscaleRatio]}
+                        min={1}
+                        max={100}
+                        step={1}
+                        onValueChange={(v) => onGrayscaleRatioChange?.(v[0])}
+                      />
+                    </div>
+                  )}
+
+                  {/* 灰度运行中的操作 */}
+                  {unit.id === 'grayscale' && unit.status === 'running' && (
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleViewDetail(unit)}>
+                        <Eye className="h-3 w-3 mr-1" />
+                        查看详情
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => {
+                          updateUnit(stage.id, unit.id, {
+                            status: 'passed',
+                            feedback: '已全量发布',
+                            feedbackType: 'success',
+                            log: { time: now(), operator: '胡卓亦', result: '全量发布', resultType: 'success' },
+                          });
+                          toast.success(`版本 ${versionNumber ?? ''} 已全量发布`);
+                        }}
+                      >
+                        全量发布
+                      </Button>
+                    </div>
+                  )}
+
                   {/* Action buttons – only when reached */}
                   {!isPending && (
                     <div className="flex flex-wrap gap-2">
