@@ -108,6 +108,58 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
     resetForms();
   };
 
+  // ===== 发布流水线 =====
+  const [pipelines, setPipelines] = useState<Record<string, PipelineStage[]>>({});
+  const [grayscaleRatios, setGrayscaleRatios] = useState<Record<string, number>>({});
+
+  const pipelineStatus = (stages: PipelineStage[]): VersionStatus | null => {
+    const units = stages.flatMap((s) => s.units);
+    const gray = units.find((u) => u.id === 'grayscale');
+    const approval = units.find((u) => u.id === 'approval');
+    if (gray?.status === 'passed') return 'effective';
+    if (gray?.status === 'running') return 'grayscale';
+    if (approval?.status === 'running' || approval?.status === 'passed') return 'approving';
+    return null;
+  };
+
+  const displayVersions = useMemo(
+    () =>
+      versions.map((v) => {
+        const stages = pipelines[v.id];
+        const st = stages ? pipelineStatus(stages) : null;
+        return st ? { ...v, status: st } : v;
+      }),
+    [versions, pipelines],
+  );
+
+  const openPipeline = (version: StrategyVersion) => {
+    setSelectedVersion(version);
+    setPipelines((prev) =>
+      prev[version.id] ? prev : { ...prev, [version.id]: createInitialPipeline() },
+    );
+    setGrayscaleRatios((prev) => (prev[version.id] ? prev : { ...prev, [version.id]: 10 }));
+    setModalType('publish');
+  };
+
+  const closePipeline = () => {
+    const v = selectedVersion;
+    if (v) {
+      const stages = pipelines[v.id];
+      // 未进入发布审批环节时，关闭弹窗即关闭（终止）该发布流水线
+      if (stages && !pipelineStatus(stages)) {
+        setPipelines((prev) => {
+          const next = { ...prev };
+          delete next[v.id];
+          return next;
+        });
+        toast.info(`版本 ${v.versionNumber} 的发布流水线已关闭`);
+      }
+    }
+    setModalType(null);
+    setSelectedVersion(null);
+    resetForms();
+  };
+
   const handlePublish = () => {
     if (selectedVersion) {
       if (publishType === 'grayscale') {
@@ -120,6 +172,7 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
       resetForms();
     }
   };
+
 
   const handleRollback = () => {
     if (selectedVersion) {
