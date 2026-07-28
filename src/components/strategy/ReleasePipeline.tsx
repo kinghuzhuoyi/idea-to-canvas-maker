@@ -51,6 +51,12 @@ export interface PipelineStage {
 
 interface ReleasePipelineProps {
   versionNumber?: string;
+  /** Controlled pipeline state */
+  stages: PipelineStage[];
+  onStagesChange: (stages: PipelineStage[]) => void;
+  /** Grayscale traffic ratio (controlled) */
+  grayscaleRatio?: number;
+  onGrayscaleRatioChange?: (ratio: number) => void;
   /** Called when the final 灰度发布 button is clicked */
   onGrayscalePublish?: () => void;
 }
