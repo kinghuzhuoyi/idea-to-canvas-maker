@@ -314,7 +314,7 @@ export function VersionTab({ versions, userRole }: VersionTabProps) {
         </CardHeader>
         <CardContent>
           <VersionTable
-            versions={versions}
+            versions={displayVersions}
             userRole={userRole}
             onPublish={(v) => openPipeline(v)}
             onCopy={handleCopy}
